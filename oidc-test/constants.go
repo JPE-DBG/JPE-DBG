@@ -16,7 +16,7 @@ const (
 	sessionTokenKey = "token"
 	sessionTSKey    = "ts"
 
-	readerGroup = "seti-viewer-dev"
+	readerGroup = "seti_viewer_dev"
 
 	shutdownTimeout             = 10 * time.Second
 	defaultSessionMaxAgeSeconds = 14400

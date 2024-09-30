@@ -8,7 +8,7 @@ import (
 
 func handleDisplayToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	session, err := getSession(r)
+	session, err := authHandler.Session(r)
 	if err != nil {
 		http.Error(w, "Failed to get session: "+err.Error(), http.StatusInternalServerError)
 		return

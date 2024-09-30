@@ -2,17 +2,14 @@ package main
 
 import (
 	"context"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"github.com/coreos/go-oidc"
-	"github.com/gorilla/sessions"
-	"golang.org/x/oauth2"
 	"log"
 	"net/http"
+	"oidc1/oidchandler"
 	"os"
 	"os/signal"
-	"time"
 )
 
 var (
@@ -29,13 +26,10 @@ var (
 	sessionMaxAge     = getEnv("SESSION_MAX_AGE_SEC", defaultSessionMaxAgeSeconds)
 	cleanupInterval   = getEnv("CLEANUP_INTERVAL_SEC", defaultCleanupSeconds)
 	userCheckInterval = getEnv("USER_CHECK_INTERVAL_SEC", defaultUserCheckIntervalSeconds)
+	authHandler       *oidchandler.OidcHandler
 )
 var (
-	oauth2Config *oauth2.Config
-	oidcProvider *oidc.Provider
-	sessionStore *sessions.FilesystemStore
-	baseContext  context.Context
-	customClient *http.Client
+	baseContext context.Context
 )
 
 func main() {
@@ -47,33 +41,22 @@ func main() {
 	baseContext, stop = signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	customTransport := initTLSTransport(err) //will be needed later in handleCallback, so don't remove this line!
-	customClient = &http.Client{
-		Transport: customTransport,
-	}
+	authHandler, err = oidchandler.NewOidcHandler(baseContext, oidchandler.Config{
+		ProviderURL:      providerURL,
+		ClientID:         clientID,
+		ClientSecret:     clientSecret,
+		SessionStorePath: sessionStorePath,
+		SessionStoreSize: sessionStoreSize,
+		CaCertPath:       caCertPath,
+		RedirectURL:      redirectURL,
+		//Scopes:            []string{oidc.ScopeOpenID, "profile", "email", oidcScopeSeti},
+		Scopes:            []string{oidc.ScopeOpenID, oidcScopeSeti},
+		SessionMaxAge:     sessionMaxAge,
+		CleanupInterval:   cleanupInterval,
+		UserCheckInterval: userCheckInterval,
+	})
 
-	oidcProvider, err = oidc.NewProvider(oidc.ClientContext(baseContext, customClient), providerURL)
-	if err != nil {
-		log.Fatalf("Failed to get provider: %v", err)
-	}
-
-	oauth2Config = &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
-		Endpoint:     oidcProvider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"}, // Switch to oidc.ScopeSeti for IAM testing!
-	}
-
-	sessionStore = sessions.NewFilesystemStore(sessionStorePath, []byte(generateRandomSecret()))
-	sessionStore.MaxLength(sessionStoreSize)
-	sessionStore.Options.MaxAge = sessionMaxAge
-	sessionStore.Options.HttpOnly = true
-	sessionStore.Options.Secure = true
-	gob.Register(&oauth2.Token{})
-	gob.Register(&time.Time{})
-
-	go cleanupStaleSessions(baseContext, sessionStorePath, time.Duration(cleanupInterval)*time.Second)
+	go authHandler.CleanupStaleSessions(baseContext, cleanupInterval)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", serverHost, serverPort),

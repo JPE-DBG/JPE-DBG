@@ -5,7 +5,7 @@ import (
 )
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	session, err := getSession(r)
+	session, err := authHandler.Session(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

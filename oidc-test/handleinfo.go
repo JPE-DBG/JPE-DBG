@@ -6,20 +6,20 @@ import (
 
 func handleInfo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	session, err := getSession(r)
+	session, err := authHandler.Session(r)
 	if err != nil {
 		http.Error(w, "Failed to get session: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	token := getToken(session)
+	token := authHandler.Token(session)
 	if token == nil {
 		http.Error(w, "no token info", http.StatusUnauthorized)
 		return
 	}
 
 	// get user info from provider
-	userInfo, err := getUserInfo(token)
+	userInfo, err := authHandler.UserInfo(baseContext, token)
 	if err != nil {
 		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusInternalServerError)
 		return

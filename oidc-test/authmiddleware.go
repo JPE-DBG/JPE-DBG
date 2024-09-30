@@ -7,21 +7,15 @@ import (
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := getSession(r)
-		if err != nil {
+		session, err := authHandler.Session(r)
+		if err != nil || session.IsNew {
 			http.Error(w, "Failed to get session: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		token := getToken(session)
-		if token == nil {
-			http.Error(w, "no token info", http.StatusUnauthorized)
-			return
-		}
-
-		if needUserInfoUpdate(session, userCheckInterval) {
+		if authHandler.NeedUserInfoUpdate(session, userCheckInterval) {
 			log.Println("Updating user info")
-			session, err = updateUserInfo(w, r, session, token)
+			session, err = authHandler.UpdateUserInfo(baseContext, w, r)
 			if err != nil {
 				http.Error(w, "Failed to update user info: "+err.Error(), http.StatusInternalServerError)
 				return
