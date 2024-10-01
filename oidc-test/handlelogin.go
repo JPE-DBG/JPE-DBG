@@ -5,5 +5,5 @@ import (
 )
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, authHandler.PrepareSession(w), http.StatusFound)
+	http.Redirect(w, r, authHandler.PrepareAuthCodeUrl(w), http.StatusFound)
 }

@@ -2,21 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"golang.org/x/oauth2"
 	"net/http"
 )
 
 func handleDisplayToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	session, err := authHandler.Session(r)
-	if err != nil {
-		http.Error(w, "Failed to get session: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
 
-	// Retrieve the token from the session
-	token, ok := session.Values["token"].(*oauth2.Token)
-	if !ok || token == nil {
+	token := authHandler.Token(r.Context())
+	if token == nil {
 		http.Error(w, "No token found in session", http.StatusNotFound)
 		return
 	}

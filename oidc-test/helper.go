@@ -36,16 +36,9 @@ func getEnv[T any](key string, defaultValue T) T {
 	return result
 }
 
-// isGroupMember checks if the user is a member of the group.
-func isGroupMember(groups []string, group string) bool {
-	for _, g := range groups {
-		if g == group {
-			return true
-		}
-	}
-	return false
-}
-
+// formatUserInfo formats the user information from an oidc.UserInfo object into a string.
+// It retrieves the claims from the UserInfo object, aligns the keys, and formats the values.
+// The formatted string is returned.
 func formatUserInfo(i *oidc.UserInfo) string {
 	var m map[string]any
 	err := i.Claims(&m)

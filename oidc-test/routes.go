@@ -8,11 +8,12 @@ func initRoutes() *mux.Router {
 	// non-protected routes
 	r.HandleFunc("/", handleMain)
 	r.HandleFunc("/login", handleLogin)
-	r.HandleFunc("/callback", handleCallback)
+	r.HandleFunc("/callback", authHandler.HandleCallback)
+	r.Use(authHandler.SessionManagerMiddleware())
 
 	// protected routes
 	protected := r.NewRoute().Subrouter()
-	protected.Use(authMiddleware)
+	protected.Use(authHandler.AuthMiddleware)
 	protected.HandleFunc("/info", handleInfo)
 	protected.HandleFunc("/logout", handleLogout)
 	protected.HandleFunc("/display-token", handleDisplayToken)

@@ -13,20 +13,16 @@ import (
 )
 
 var (
-	serverHost        = getEnv("HOST", "localhost")
-	serverPort        = getEnv("PORT", "8080")
-	clientID          = getEnv("CLIENT_ID", "")
-	clientSecret      = getEnv("CLIENT_SECRET", "")
-	redirectURL       = getEnv("REDIRECT_URL", fmt.Sprintf("http://%s:%s/callback", serverHost, serverPort))
-	providerURL       = getEnv("PROVIDER_URL", "")
-	sessionStorePath  = getEnv("SESSION_STORE_PATH", "")
-	sessionStoreSize  = getEnv("SESSION_STORE_SIZE", defaultSessionStoreSize)
-	caCertPath        = getEnv("CA_CERT_PATH", "")
-	logOutUrl         = getEnv("LOGOUT_URL", "")
-	sessionMaxAge     = getEnv("SESSION_MAX_AGE_SEC", defaultSessionMaxAgeSeconds)
-	cleanupInterval   = getEnv("CLEANUP_INTERVAL_SEC", defaultCleanupSeconds)
-	userCheckInterval = getEnv("USER_CHECK_INTERVAL_SEC", defaultUserCheckIntervalSeconds)
-	authHandler       *oidchandler.OidcHandler
+	serverHost    = getEnv("HOST", "localhost")
+	serverPort    = getEnv("PORT", "8080")
+	clientID      = getEnv("CLIENT_ID", "")
+	clientSecret  = getEnv("CLIENT_SECRET", "")
+	redirectURL   = getEnv("REDIRECT_URL", fmt.Sprintf("http://%s:%s/callback", serverHost, serverPort))
+	providerURL   = getEnv("PROVIDER_URL", "")
+	caCertPath    = getEnv("CA_CERT_PATH", "")
+	logOutUrl     = getEnv("LOGOUT_URL", "")
+	sessionMaxAge = getEnv("SESSION_MAX_AGE_SEC", defaultSessionMaxAgeSeconds)
+	authHandler   *oidchandler.OidcHandler
 )
 var (
 	baseContext context.Context
@@ -42,21 +38,15 @@ func main() {
 	defer stop()
 
 	authHandler, err = oidchandler.NewOidcHandler(baseContext, oidchandler.Config{
-		ProviderURL:      providerURL,
-		ClientID:         clientID,
-		ClientSecret:     clientSecret,
-		SessionStorePath: sessionStorePath,
-		SessionStoreSize: sessionStoreSize,
-		CaCertPath:       caCertPath,
-		RedirectURL:      redirectURL,
+		ProviderURL:  providerURL,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		CaCertPath:   caCertPath,
+		RedirectURL:  redirectURL,
 		//Scopes:            []string{oidc.ScopeOpenID, "profile", "email", oidcScopeSeti},
-		Scopes:            []string{oidc.ScopeOpenID, oidcScopeSeti},
-		SessionMaxAge:     sessionMaxAge,
-		CleanupInterval:   cleanupInterval,
-		UserCheckInterval: userCheckInterval,
+		Scopes:        []string{oidc.ScopeOpenID, oidcScopeSeti},
+		SessionMaxAge: sessionMaxAge,
 	})
-
-	go authHandler.CleanupStaleSessions(baseContext, cleanupInterval)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", serverHost, serverPort),
