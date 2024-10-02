@@ -18,6 +18,7 @@ type OidcHandler struct {
 	sessionManager    *scs.SessionManager
 	tlsClient         *http.Client
 	userCheckInterval int
+	loginURL          string
 }
 
 type Config struct {
@@ -28,6 +29,7 @@ type Config struct {
 	RedirectURL   string
 	Scopes        []string
 	SessionMaxAge int
+	LoginURL      string
 }
 
 // NewOidcHandler initializes a new OidcHandler with the given configuration.
@@ -38,6 +40,8 @@ func NewOidcHandler(ctx context.Context, config Config) (*OidcHandler, error) {
 		handler OidcHandler
 		err     error
 	)
+
+	handler.loginURL = config.LoginURL
 
 	// initialize the tls enabled client
 	handler.tlsClient, err = initTLSTransport(config.CaCertPath)
@@ -74,9 +78,15 @@ func (h *OidcHandler) SessionManagerMiddleware() func(next http.Handler) http.Ha
 	return h.sessionManager.LoadAndSave
 }
 
-// SaveToSession saves the provided key-value pairs to the session.
+// LoginDone checks if the login indicator exists in the session.
+// Returns true if the login indicator is found, otherwise false.
+func (h *OidcHandler) LoginDone(ctx context.Context) bool {
+	return h.sessionManager.Exists(ctx, loginIndicator)
+}
+
+// saveToSession saves the provided key-value pairs to the session.
 // It iterates over the map and stores each key-value pair in the session.
-func (h *OidcHandler) SaveToSession(ctx context.Context, values map[string]any) {
+func (h *OidcHandler) saveToSession(ctx context.Context, values map[string]any) {
 	for k, v := range values {
 		h.sessionManager.Put(ctx, k, v)
 	}
@@ -120,8 +130,8 @@ func (h *OidcHandler) PrepareAuthCodeUrl(w http.ResponseWriter) string {
 	return h.oauth2Config.AuthCodeURL(state)
 }
 
-// ClearStateCookie clears the state cookie by setting its value to an empty string and its MaxAge to -1.
-func (h *OidcHandler) ClearStateCookie(w http.ResponseWriter) {
+// clearStateCookie clears the state cookie by setting its value to an empty string and its MaxAge to -1.
+func (h *OidcHandler) clearStateCookie(w http.ResponseWriter) {
 	// clear the state cookie, it's not needed anymore
 	http.SetCookie(w, &http.Cookie{
 		Name:   stateCookie,
@@ -139,34 +149,6 @@ func isGroupMember(groups []string, group string) bool {
 		}
 	}
 	return false
-}
-
-// HandleCallback handles the OAuth2 callback from the OIDC provider.
-// It exchanges the authorization code for an OAuth2 token, retrieves the user's groups,
-// saves the token and groups to the session, clears the state cookie, and redirects to the menu page.
-func (h *OidcHandler) HandleCallback(w http.ResponseWriter, r *http.Request) {
-	token, err := h.exchangeToken(r.Context(), r)
-	if err != nil {
-		http.Error(w, "failed to exchange token: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	groups, err := h.groups(r.Context(), token)
-	if err != nil {
-		http.Error(w, "failed to get groups: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	values := map[string]any{
-		sessionGroupKey: groups,
-		sessionTokenKey: *token,
-	}
-	h.SaveToSession(r.Context(), values)
-
-	// clear the state cookie, it's not needed anymore
-	h.ClearStateCookie(w)
-
-	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 }
 
 // exchangeToken exchanges the authorization code for an OAuth2 token.
@@ -215,7 +197,11 @@ func (h *OidcHandler) groups(ctx context.Context, token *oauth2.Token) ([]string
 	if !ok {
 		return nil, errors.New("groups claim not found")
 	}
-	for _, v := range groups.([]interface{}) {
+	groupSlice, ok := groups.([]interface{})
+	if !ok {
+		return nil, errors.New("groups claim is not a slice")
+	}
+	for _, v := range groupSlice {
 		groupsList = append(groupsList, v.(string))
 	}
 	return groupsList, nil
@@ -240,4 +226,8 @@ func (h *OidcHandler) UserInfoFromSession(ctx context.Context) (*oidc.UserInfo, 
 		return nil, errors.New("no token info")
 	}
 	return h.userInfo(ctx, token)
+}
+
+func (h *OidcHandler) HasReadAccess(ctx context.Context) bool {
+	return h.sessionManager.GetBool(ctx, readAccess)
 }

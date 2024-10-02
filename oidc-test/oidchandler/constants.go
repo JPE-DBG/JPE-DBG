@@ -8,4 +8,6 @@ const (
 	sessionStateMaxAge int = 120
 	groupsKey              = "seti"
 	readerGroup            = "seti_viewer_dev"
+	loginIndicator         = "logindone"
+	readAccess             = "readaccess"
 )

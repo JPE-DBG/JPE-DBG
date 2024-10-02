@@ -4,7 +4,10 @@ import (
 	"net/http"
 )
 
-func handleMain(w http.ResponseWriter, _ *http.Request) {
+func handleMain(w http.ResponseWriter, r *http.Request) {
+	if authHandler.LoginDone(r.Context()) {
+		http.Redirect(w, r, "/menu", http.StatusSeeOther)
+	}
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`

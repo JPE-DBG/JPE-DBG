@@ -20,6 +20,7 @@ var (
 	redirectURL   = getEnv("REDIRECT_URL", fmt.Sprintf("http://%s:%s/callback", serverHost, serverPort))
 	providerURL   = getEnv("PROVIDER_URL", "")
 	caCertPath    = getEnv("CA_CERT_PATH", "")
+	loginURL      = getEnv("LOGIN_URL", defaultLoginURL)
 	logOutUrl     = getEnv("LOGOUT_URL", "")
 	sessionMaxAge = getEnv("SESSION_MAX_AGE_SEC", defaultSessionMaxAgeSeconds)
 	authHandler   *oidchandler.OidcHandler
@@ -46,6 +47,7 @@ func main() {
 		//Scopes:            []string{oidc.ScopeOpenID, "profile", "email", oidcScopeSeti},
 		Scopes:        []string{oidc.ScopeOpenID, oidcScopeSeti},
 		SessionMaxAge: sessionMaxAge,
+		LoginURL:      loginURL,
 	})
 
 	server := &http.Server{

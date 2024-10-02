@@ -4,14 +4,12 @@ import "net/http"
 
 func (h *OidcHandler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		groups, ok := h.sessionManager.Get(r.Context(), sessionGroupKey).([]string)
-		if !ok || len(groups) == 0 {
-			http.Error(w, "no group info", http.StatusUnauthorized)
+		if !h.LoginDone(r.Context()) {
+			http.Redirect(w, r, h.loginURL, http.StatusFound)
 			return
 		}
-
-		if !isGroupMember(groups, readerGroup) {
-			http.Error(w, "not a seti user", http.StatusUnauthorized)
+		if !h.HasReadAccess(r.Context()) {
+			http.Error(w, "Access denied", http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, r)
