@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/coreos/go-oidc"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/coreos/go-oidc"
 )
 
 // getEnv retrieves the value of the environment variable named by the key.
@@ -33,7 +34,6 @@ func getEnv[T any](key string, defaultValue T) T {
 		log.Printf("Unsupported type for environment variable %s, using default", key)
 		return defaultValue
 	}
-	return result
 }
 
 // formatUserInfo formats the user information from an oidc.UserInfo object into a string.
