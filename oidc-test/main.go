@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/coreos/go-oidc"
 	"log"
 	"net/http"
 	"oidc1/oidchandler"
 	"os"
 	"os/signal"
+
+	"github.com/coreos/go-oidc"
 )
 
 var (
@@ -49,6 +50,9 @@ func main() {
 		SessionMaxAge: sessionMaxAge,
 		LoginURL:      loginURL,
 	})
+	if err != nil {
+		log.Fatalf("Failed to initialize oidc handler: %v", err)
+	}
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", serverHost, serverPort),

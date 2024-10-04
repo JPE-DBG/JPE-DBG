@@ -6,10 +6,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/alexedwards/scs/v2"
 	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
-	"net/http"
 )
 
 type OidcHandler struct {
@@ -124,7 +125,8 @@ func (h *OidcHandler) PrepareAuthCodeUrl(w http.ResponseWriter) string {
 		MaxAge:   sessionStateMaxAge,
 		HttpOnly: true,
 		Secure:   false,
-		SameSite: http.SameSiteNoneMode,
+		//SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	return h.oauth2Config.AuthCodeURL(state)
