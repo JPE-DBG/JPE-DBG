@@ -6,12 +6,16 @@
 - [Go Naming](https://talks.golang.org/2014/names.slide#1)
 - [Theory of modern go](https://peter.bourgon.org/blog/2017/06/09/theory-of-modern-go.html)
 - [Blog Golang - Package Names](https://blog.golang.org/package-names), also: [2](https://github.com/golang/go/wiki/CodeReviewComments#indent-error-flow)
+
  
 ## Go Code Linting & Security
 - [YT - Go Linters: Myths and Best Practices](https://www.youtube.com/watch?v=1U-Gzz4TYP0)
 - [YT - Going secure with Go - GopherCon SG 2019](https://www.youtube.com/watch?v=9e2gRtzemGo)
 - [golangci/awesome-go-linters](https://github.com/golangci/awesome-go-linters)
  
+ ## Design patterns
+ - [Refactoring Guru](https://refactoring.guru/design-patterns/go)
+ - [The standard library now has all you need for advanced routing in Go](https://www.youtube.com/watch?v=H7tbjKFSg58)
  
 ## Moving from X to Go
 - [Best Practices for a new Go Developer](https://blog.rubylearning.com/best-practices-for-a-new-go-developer-8660384302fc)
