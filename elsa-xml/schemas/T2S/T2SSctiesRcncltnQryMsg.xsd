@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2013 sp1 (http://www.altova.com) by Arnaud Hocevar (CLEARSTREAM SERVICE LUX.) -->
+<xs:schema xmlns:tsrq="tsrq.schema.t2si" xmlns:t2s="t2s.data.typ.t2si" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="tsrq.schema.t2si" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:import namespace="t2s.data.typ.t2si" schemaLocation="T2SDataTyp.xsd"/>
+	<xs:element name="T2SSctiesRcncltnQryMsg" type="tsrq:T2SSctiesRcncltnQryMsgType">
+		<xs:annotation>
+			<xs:documentation>Root element T2S Securities Reconciliation Query Message</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!--Sourced from reda.010-->
+	<!--Local Types-->
+	<xs:complexType name="T2SSctiesRcncltnQryMsgType">
+		<xs:annotation>
+			<xs:documentation>Complex Type T2S Securities Reconciliation Query Message Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CreTmStmp" type="t2s:ISODateTime">
+				<xs:annotation>
+					<xs:documentation>Creation Timestamp</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TechMsgId" type="t2s:RestrictedFINXMax16Text"/>
+			<xs:element name="QryMsgId" type="tsrq:DocumentIdentification11">
+				<xs:annotation>
+					<xs:documentation>Query Message Identification</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReqTp" type="tsrq:GenericIdentification1">
+				<xs:annotation>
+					<xs:documentation>Request Type</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IgnBndlFlg" type="t2s:YesNoIndicator">
+				<xs:annotation>
+					<xs:documentation>Indicator set to Y if the message should bot be considered for bundling in files by T2S-I</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SchCrit" type="tsrq:SecuritiesSearchCriteria1">
+				<xs:annotation>
+					<xs:documentation>Search Criteria</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Imported T2S Types-->
+	<xs:complexType name="DatePeriodDetails">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DatePeriodDetails</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Range of time defined by a start date and an end date.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FrDt" type="t2s:ISODate">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FromDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Start date of the range.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ToDt" type="t2s:ISODate">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ToDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">End date of the range.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DateSearchChoice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DateSearchChoice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between search criteria based on dates and date ranges.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="FrDt" type="t2s:ISODate">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">FromDate</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Start date of the range.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ToDt" type="t2s:ISODate">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">ToDate</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">End date of the range.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="FrToDt" type="tsrq:DatePeriodDetails">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">FromToDate</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Particular time span specified between a start date and an end date.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="EQDt" type="t2s:ISODate">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">EqualDate</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Specified date to match.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentIdentification11">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DocumentIdentification11</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Identification and creation date of a document.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Id" type="t2s:RestrictedFINXMax16Text">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identifier of the document (message) assigned by the sender of the document.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GenericIdentification1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">GenericIdentification1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Information related to an identification, eg, party identification or account identification.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Id" type="t2s:Exact4AlphaNumericText">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identification assigned by an institution.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SchmeNm" type="t2s:Max4AlphaNumericText">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SchemeName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name of the identification scheme.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Issr" type="t2s:Max4AlphaNumericText">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Issuer</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Entity that assigns the identification.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PartyIdentification71Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">PartyIdentification71Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between different formats for the identification of a party.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="AnyBIC" type="t2s:AnyBICIdentifier">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">AnyBIC</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecuritiesSearchCriteria1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecuritiesSearchCriteria1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Criteria for a query about securities reference data.</xs:documentation>
+		</xs:annotation>
+		<xs:choice maxOccurs="unbounded">
+			<xs:element name="FinInstrmId" type="tsrq:SecurityIdentification14">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Way(s) of identifying the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClssfctnFinInstrm" type="t2s:CFIIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClassificationFinancialInstrument</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Classification type of the financial instrument, as per the ISO Classification of Financial Instrument (CFI) codification, for example, common share with voting rights, fully paid, or registered.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MtrtyDt" type="tsrq:DateSearchChoice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaturityDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Planned final repayment date at the time of issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IsseDt" type="tsrq:DateSearchChoice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssueDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date/time at which the security was made available.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IsseCcy" type="t2s:ActiveOrHistoricCurrencyCode">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssueCurrency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency in which a security is issued or redenominated.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CtryOfIsse" type="t2s:CountryCode">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CountryOfIssue</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Primary market or country where a security is issued by the issuer or its agent.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MntngCSD" type="tsrq:SystemPartyIdentification1Choice_NOEXT_T2S">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaintainingCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Entity involved in an activity.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InvstrCSD" type="tsrq:SystemPartyIdentification1Choice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InvestorCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Entity involved in an activity.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssrCSD" type="tsrq:SystemPartyIdentification1Choice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuerCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Entity involved in an activity.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TechIssrCSD" type="tsrq:SystemPartyIdentification1Choice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TechnicalIssuerCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Technical issuer of a security</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CSD" type="tsrq:SystemPartyIdentification1Choice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">CSD of a security</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="SecurityIdentification14">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityIdentification14</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Identification of a security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ISIN" type="t2s:ISINIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISIN</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">International Securities Identification Number (ISIN).  A numbering system designed by the United Nation's International Organisation for Standardisation (ISO). The ISIN is composed of a 2-character prefix representing the country of issue, followed by the national security number (if one exists), and a check digit. Each country has a national numbering agency that assigns ISIN numbers for securities in that country.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification1Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between an identification of a party or a combination of the responsible party identification and the business identifier.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="OrgId" type="tsrq:PartyIdentification71Choice">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">OrganisationIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Provides the identification of a party.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="CmbndId" type="tsrq:SystemPartyIdentification3">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">CombinedIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Identifies the party with the combined identification of both the responsible entity and the party itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification1Choice_NOEXT_T2S">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between a identification of a party or a combination of the responsible party identification and the business identifier.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="OrgId" type="tsrq:PartyIdentification71Choice">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">OrganisationIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Identifies the party with the identification of a party.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification3">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification3</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Unique identification to unambiguously identify the party within the system.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="RltdPtyId" type="t2s:BICFIIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RelatedPartyIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identification to unambiguously identify the party within the system.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RspnsblPtyId" type="t2s:BICFIIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ResponsiblePartyIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identification of the party responsible for the maintenance of the party reference data.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="Exact4AlphaNumericText">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Exact4AlphaNumericText</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies an alphanumeric string with a length of 4 characters.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9]{4}"/>
+			<xs:enumeration value="CSDL">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Securities CSD Link Query</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="DEVN">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Securities Deviating Nominal Query</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="ISIN">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISIN List Query</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="SECR">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Securities Reference Data Query</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

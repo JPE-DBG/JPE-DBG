@@ -1,0 +1,47 @@
+# github.com/antchfx/xmlquery v1.4.2
+## explicit; go 1.14
+github.com/antchfx/xmlquery
+# github.com/antchfx/xpath v1.3.2
+## explicit; go 1.14
+github.com/antchfx/xpath
+# github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
+## explicit
+github.com/golang/groupcache/lru
+# github.com/lestrrat-go/libxml2 v0.0.0-20240905100032-c934e3fcb9d3
+## explicit; go 1.21
+github.com/lestrrat-go/libxml2
+github.com/lestrrat-go/libxml2/clib
+github.com/lestrrat-go/libxml2/dom
+github.com/lestrrat-go/libxml2/internal/debug
+github.com/lestrrat-go/libxml2/internal/option
+github.com/lestrrat-go/libxml2/parser
+github.com/lestrrat-go/libxml2/types
+github.com/lestrrat-go/libxml2/xpath
+github.com/lestrrat-go/libxml2/xsd
+# github.com/pkg/errors v0.9.1
+## explicit
+github.com/pkg/errors
+# golang.org/x/net v0.7.0
+## explicit; go 1.17
+golang.org/x/net/html
+golang.org/x/net/html/atom
+golang.org/x/net/html/charset
+# golang.org/x/text v0.7.0
+## explicit; go 1.17
+golang.org/x/text/encoding
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/htmlindex
+golang.org/x/text/encoding/internal
+golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/japanese
+golang.org/x/text/encoding/korean
+golang.org/x/text/encoding/simplifiedchinese
+golang.org/x/text/encoding/traditionalchinese
+golang.org/x/text/encoding/unicode
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/internal/utf8internal
+golang.org/x/text/language
+golang.org/x/text/runes
+golang.org/x/text/transform

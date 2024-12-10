@@ -1,0 +1,16 @@
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:sese.024.001.10">
+ <SctiesSttlmTxStsAdvc>
+    <TxId>
+        <AcctOwnrTxId>NONREF</AcctOwnrTxId>
+        <PrcrTxId>SD277138F0FWOUSH</PrcrTxId>
+    </TxId>
+    <PrcgSts>
+        <Rjctd>
+            <Rsn>
+                <Cd><Cd>OTHR</Cd></Cd>
+                <AddtlRsnInf>TS10 REJECT REJECT ACCEPT SEQ</AddtlRsnInf>
+            </Rsn>
+        </Rjctd>
+    </PrcgSts>
+ </SctiesSttlmTxStsAdvc>
+</Document>

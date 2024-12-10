@@ -1,0 +1,870 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+15/07/19 B. Lefebure Update for T2S release 3.2 Partial Release Quantity and Quantity Remaining On-Hold  
+08/08/22 B. Lefebure Update for T2S release 6.2 Add Counterparty MITI and InputMediaID
+-->
+<xs:schema xmlns:cst2s="cst2s.schema.clearstream" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:t2s="urn:iso:std:iso:20022:tech:xsd:head.001.001.01" targetNamespace="cst2s.schema.clearstream" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<!-- header import for embedded messages -->
+	<xs:import namespace="urn:iso:std:iso:20022:tech:xsd:head.001.001.01" schemaLocation="ISO_T2S_Xml/head.001.xsd"/>
+	<xs:element name="CST2SMsg">
+		<xs:annotation>
+			<xs:documentation>Root element: Clearstream - T2S Message</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="CSPayload">
+					<xs:annotation>
+						<xs:documentation>Clearstream payload first
+In this node, all Clearstream "plus" information is collected.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="IntApplHead" type="cst2s:IntApplHdrType"/>
+							<xs:element name="StrmgInfo" type="cst2s:StrmgInfoType" minOccurs="0"/>
+							<xs:element name="MsgProcInfo" minOccurs="0" maxOccurs="4">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="InxTyp" type="cst2s:MaxChar4Typ">
+											<xs:annotation>
+												<xs:documentation>Defines if the sequence contains original or related information</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="InxRef">
+											<xs:annotation>
+												<xs:documentation>Contains referencei information to link feedback to original message.</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="OrigSEME" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Original customer reference created for cancellations and modifications</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="CBFMLMTxnId" type="cst2s:RestrictedFINXMax50Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>MLM identifier of the business message</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="CSTxnId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Clearstream reference: Clearstream-wide unique indentifier assigned by the first system to deal with the messages. Common ID used by CBL systems.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="MktInfrstrctrTxId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>T2S Reference</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="T2SActrRef" type="cst2s:T2SActrRefType" minOccurs="0" maxOccurs="2">
+														<xs:annotation>
+															<xs:documentation>Repetitive sequence to list all available T2S Actor Reference, together  with the corresponding reference owners. T2S Actor references are only relevant in case a sese.023 or semt.013 is refered to</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="T2STxRef" type="cst2s:RestrictedFINXMax16Text" minOccurs="0"/>
+													<xs:element name="CxlReqRef" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Contains the reference of the original sese.020</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="ReqRef" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Contains the reference of the original reda.030</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="ReqMsgId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Contains the reference of the original creation or modificationr equest</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="QryRef" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Contains the reference of the original business query which triggered the report</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="Pagtn" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Pagination details</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="PgNbr" type="cst2s:Max5NumericText">
+																	<xs:annotation>
+																		<xs:documentation>Specifies the Page Number</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="LstPgInd" type="t2s:YesNoIndicator">
+																	<xs:annotation>
+																		<xs:documentation>Specifies if the page is the last page</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="BizMsgIdr" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Copy of T2S header</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="MtchLegRef" type="cst2s:MtchLegRefType" minOccurs="0" maxOccurs="3">
+														<xs:annotation>
+															<xs:documentation>This subsequence contains the references that allow to identify the matched leg.</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="CtrPtyMktInfrstrctrTxId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>T2S Reference of Counterparty Instruction</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="InxDetl" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Contains fixed and unchangeable attributes of the references</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="SctiesMvmntTp" type="cst2s:ReceiveDelivery1Code" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Copy from SttlmTpAndAddtlParams/SctiesMvmntTp</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="MsgDefIdr" type="t2s:MsgNmId_T2S_1">
+														<xs:annotation>
+															<xs:documentation>Enforce type with ISO15022 MsgNmId_T2S_1</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="InstructgMode" type="cst2s:InstructgModeType">
+														<xs:annotation>
+															<xs:documentation>DCP/ICP/Instructing generated by T2S</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="GenSystNm" type="cst2s:MaxChar4Typ" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>System where the referenced payload message was first generated</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="TLMGenFlg" type="t2s:YesNoIndicator" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Indicated if the message was generated by TLM</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="TLMGenReasonCd" type="cst2s:TLMGenReasonCdType" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Reason code why TLM generated the instruction</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="T2SAckTmstmp" type="cst2s:ISONormalisedDateTime" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>T2S internal timestamp for accepted status</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="T2SMtchTmstmp" type="cst2s:ISONormalisedDateTime" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>T2S internal timestamp for matched status</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="ModCxlMvmntTp" type="cst2s:ReceiveDelivery1Code" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Specifies movement type of modified or cancelled instruction leg</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="GenRsn" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Optional reason indicating purpose of the generated instruction</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+													<xs:element name="InputMediaId" type="cst2s:MaxChar16Typ" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Input MediaId of instruction</xs:documentation>
+														</xs:annotation>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="NoLifecycChgFlg" type="t2s:YesNoIndicator" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Indicates in case a trigger message from T2S does not result in fa lifecycle change</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="NoLifecycChgReason" type="cst2s:NoLifecycChgReasonType" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Reason why the trigger message from T2S does not result in a lifecyle change</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="InsLifecycChg" type="cst2s:InsLifecycChgType" minOccurs="0" maxOccurs="unbounded">
+											<xs:annotation>
+												<xs:documentation>Contains all changes to the lifecycle</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="IntAddInfo" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Additional attributes to the flow between LIMA/SPOC (for input from CASCADE) and PM, should such a need arise in the future</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="IntCancReason.list" minOccurs="0">
+														<xs:complexType>
+															<xs:sequence maxOccurs="unbounded">
+																<xs:element name="LifecycReason" type="cst2s:ReasonType">
+																	<xs:annotation>
+																		<xs:documentation>Business reason why an instruction needs to be cancelled</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="IntRjctReason.list" minOccurs="0">
+														<xs:complexType>
+															<xs:sequence maxOccurs="unbounded">
+																<xs:element name="LifecycReason" type="cst2s:ReasonType">
+																	<xs:annotation>
+																		<xs:documentation>Business reason why an ICP instruction was rejected by the MLM</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="OrigCustMsgInfo" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Contains the original customer message</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="OrigMsgTyp" type="cst2s:MaxChar8Typ">
+																	<xs:annotation>
+																		<xs:documentation>Contains the message type, e.g. MT543, CIF...</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+																<xs:element name="OrigMsgCtnt" type="xs:anyType">
+																	<xs:annotation>
+																		<xs:documentation>Will contain the original customer message as free text</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+													<xs:element name="AddMve" minOccurs="0">
+														<xs:annotation>
+															<xs:documentation>Additional movements requested by originating system original customer message</xs:documentation>
+														</xs:annotation>
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element name="PosTyp" type="cst2s:PosTypType">
+																	<xs:annotation>
+																		<xs:documentation>Contains the position type of the additional movement</xs:documentation>
+																	</xs:annotation>
+																</xs:element>
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="T2SPayload" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="AppHdr" type="t2s:BusinessApplicationHeaderV01"/>
+							<xs:group ref="cst2s:origMsg"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ErrHdlg" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Error andling block</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="RelMsgDetl" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation>Contains the messagetype and the message sent to T2S if one exists</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="RelMsgDefIdr" type="t2s:MsgNmId_T2S_1" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>To indicate the message type, of the message sent to T2S causing an error</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="RelMsgCtnt" type="xs:anyType" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>Will contain the message sent towards T2S causing the error</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="SystErrDetl" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="SystErr" type="cst2s:RestrictedFINXMax50Text" minOccurs="0" maxOccurs="10">
+											<xs:annotation>
+												<xs:documentation>Up to 10 fields which describe the error. Filled by the backend. Should be filled with qualifier and value.</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="TargetBusTyp" type="cst2s:RestrictedFINXMax50Text" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation>The backend can specify an additional routing criteria used to identify the PI² target unit</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="IntApplHdrType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Application Header</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ApplFrom" type="cst2s:ApplType"/>
+			<xs:element name="ApplTo" type="cst2s:ApplType"/>
+			<xs:element name="TechMsgId" type="cst2s:RestrictedFINXMax16Text"/>
+			<xs:element name="MsgDefIdr" type="t2s:MsgNmId_T2S_1"/>
+			<xs:element name="CreDt" type="cst2s:ISONormalisedDateTime"/>
+			<xs:element name="CSRecvTmstmp" type="cst2s:ISONormalisedDateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Timestamp when the original trigger for this message (e.g. MT from customer, MX from T2S) entered the Clearstream system</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CpyDplct" type="t2s:CopyDuplicate1Code" minOccurs="0"/>
+			<xs:element name="PssblDplct" type="t2s:YesNoIndicator" minOccurs="0"/>
+			<xs:element name="CSPrioOrder" type="cst2s:PrioOrderType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Processing precedence</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="T2SSeqNbr" type="t2s:Max16NumericText_T2S" minOccurs="0"/>
+			<xs:element name="RecvFileInd" type="t2s:YesNoIndicator" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indicates wether the input from T2S was received in a single message or a file</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IgnBndlFlg" type="t2s:YesNoIndicator" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Indicator set to Y if the message should bot be considered for bundling in files by T2S-I</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="InsLifecycChgType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Instruction Lifecycle Change</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TargetSystSeqNbr" type="cst2s:Max16NumericText">
+				<xs:annotation>
+					<xs:documentation>Target system specific sequence number that defines the occurence of the update in the lifecycle. It must be strictly ascending with no gaps.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="T2SSeqNbr" type="t2s:Max16NumericText_T2S">
+				<xs:annotation>
+					<xs:documentation>Sequence number provided by T2S</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TLMStatusTmstmp" type="cst2s:ISONormalisedDateTime">
+				<xs:annotation>
+					<xs:documentation>Internal Timestamp assigned by TLM</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TLMActvTyp" type="cst2s:RestrictedFINXMax35Text">
+				<xs:annotation>
+					<xs:documentation>TLM functional activity</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TLMActvState" type="cst2s:RestrictedFINXMax35Text">
+				<xs:annotation>
+					<xs:documentation>TLM functional activity status</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LifecycReason" type="cst2s:ReasonType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="MtchDetl" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Contains detailed information about attributes changed due to matching activities</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="SttlmAmt" type="cst2s:RestrictedFINActiveCurrencyAndAmount" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>Contains the adjusted settlement amount after matching (on receiver side only)</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="SettleDetl" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Contains detailed information about attributes changed due to settlement activities</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="FctvSttlmDt" type="cst2s:ISONormalisedDateTime"/>
+						<xs:element name="SttldQty" type="cst2s:RestrictedFINDecimalNumber" minOccurs="0"/>
+						<xs:element name="PrevslySttldQty" type="cst2s:RestrictedFINDecimalNumber" minOccurs="0"/>
+						<xs:element name="RmngToBeSttldQty" type="cst2s:RestrictedFINDecimalNumber" minOccurs="0"/>
+						<xs:element name="SttldAmt" type="cst2s:RestrictedFINActiveCurrencyAndAmount" minOccurs="0"/>
+						<xs:element name="PrevslySttldAmt" type="cst2s:RestrictedFINActiveCurrencyAndAmount" minOccurs="0"/>
+						<xs:element name="RmngToBeSttldAmt" type="cst2s:RestrictedFINActiveCurrencyAndAmount" minOccurs="0"/>
+						<xs:element name="RestrictRef" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>This is the reference of the restriction which was used to settle this instruction </xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="LnkDetl" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Contains all information regarding linkage</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="PrcgPos" type="cst2s:ProcessingPosition3Choice">
+							<xs:annotation>
+								<xs:documentation>Linkage position type</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="MktInfrstrctrTxId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation>T2S Reference</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="T2SActrRef" type="cst2s:T2SActrRefType" minOccurs="0" maxOccurs="2"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PartRlsDetl" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Contains detailed information about quantities affected by partial release</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="PartRlsQty" type="cst2s:RestrictedFINDecimalNumber" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Partially Released Quantity as communicated by T2S</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="HoldRmngQty" type="cst2s:RestrictedFINDecimalNumber" minOccurs="1">
+							<xs:annotation>
+								<xs:documentation>Quantity Remaining on Hold as communicated by T2S</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>												
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MtchLegRefType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Matched Leg Reference</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CBFMLMTxnId" type="cst2s:RestrictedFINXMax50Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>MLM identifier of the business message</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CSTxnId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Clearstream reference: Clearstream-wide unique indentifier assigned by the first system to deal with the messages. Common ID used by CBL systems.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="T2SActrRef" type="cst2s:T2SActrRefType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ReasonType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Reason</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Rsn" type="cst2s:MaxChar4Typ">
+				<xs:annotation>
+					<xs:documentation>ISO Reason code of the rejection. There can be many for each lifecycle step.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AddtlRsnInf" type="cst2s:RestrictedFINXMax210Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Business rule, error description and rule ID of a positive rejection restriction (if any). There can be many for each lifecycle step.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StrmgInfoType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Streaming Information</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="SfkpgAcct" type="cst2s:RestrictedFINXMax35Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Account applicable for this message</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Isin" type="cst2s:ISINIdentifier" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>ISIN applicable for this message</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T2SActrRefType">
+		<xs:annotation>
+			<xs:documentation>Complex Type T2S Actor Reference</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="RefTyp" type="cst2s:RestrictedFINXMax16Text">
+				<xs:annotation>
+					<xs:documentation>Contains information about which type of T2S Actor Reference is listed in this sequence</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Ref" type="cst2s:RestrictedFINXMax16Text">
+				<xs:annotation>
+					<xs:documentation>Contains the T2S Actor Reference or References of the settlement messages</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RefOwnr" type="cst2s:AnyBICIdentifier">
+				<xs:annotation>
+					<xs:documentation>Contains the BIC of the owner of the T2S Actor Reference</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="InstructgModeType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Instructing Mode</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="4"/>
+			<xs:enumeration value="ICP"/>
+			<xs:enumeration value="DCP"/>
+			<xs:enumeration value="T2S"/>
+			<xs:enumeration value="LDCP"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="IntApplHdrIdType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Internal Application Header Identifier Type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="cst2s:RestrictedFINXMax16Text">
+			<xs:enumeration value="BLM"/>
+			<xs:enumeration value="HUB"/>
+			<xs:enumeration value="LIMA"/>
+			<xs:enumeration value="PI2"/>
+			<xs:enumeration value="PM CSD"/>
+			<xs:enumeration value="RDF"/>
+			<xs:enumeration value="T2S"/>
+			<xs:enumeration value="T2S-I"/>
+			<xs:enumeration value="SAP"/>
+			<xs:enumeration value="PM GUI"/>
+			<xs:enumeration value="CSIS"/>
+			<xs:enumeration value="XACT"/>
+			<xs:enumeration value="MICOS"/>
+			<xs:enumeration value="CUSTODY"/>
+			<xs:enumeration value="RTS"/>
+			<xs:enumeration value="SETI"/>
+			<xs:enumeration value="YACS"/>
+            <xs:enumeration value="NOSTRO"/>
+            <xs:enumeration value="NCCIP"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:group name="origMsg">
+		<xs:annotation>
+			<xs:documentation>Group Original Message (for validation redefinition)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:any processContents="skip">
+				<xs:annotation>
+					<xs:documentation>Original ISO20022 message</xs:documentation>
+				</xs:annotation>
+			</xs:any>
+		</xs:sequence>
+	</xs:group>
+	<xs:simpleType name="PrioOrderType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Priority Order</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="9"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SecMveTypType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Securities Movement Type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="DELI"/>
+			<xs:enumeration value="RECE"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TLMGenReasonCdType">
+		<xs:annotation>
+			<xs:documentation>Simple Type TLM Generation Reason Code</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="4"/>
+			<xs:enumeration value="ALRM"/>
+			<xs:enumeration value="DCPC"/>
+			<xs:enumeration value="DCPM"/>
+			<xs:enumeration value="T2RS"/>
+			<xs:enumeration value="CONT"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MaxChar8Typ">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="8"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MaxChar4Typ">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="4"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MaxChar16Typ">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="16"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="NoLifecycChgReasonType">
+		<xs:restriction base="cst2s:MaxChar4Typ">
+			<xs:enumeration value="RPRT"/>
+			<xs:enumeration value="WAIT"/>
+			<xs:enumeration value="NCHG"/>
+			<xs:enumeration value="IGNO"/>
+			<xs:enumeration value="OTHR"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ApplType">
+		<xs:sequence>
+			<xs:element name="Id" type="cst2s:IntApplHdrIdType"/>
+			<xs:element name="OtherId" type="cst2s:RestrictedFINXMax16Text" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="ActiveCurrencyCode">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ActiveCurrencyCode</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">A code allocated to a currency by a Maintenance Agency under an international identification scheme as described in the latest edition of the international standard ISO 4217 "Codes for the representation of currencies and funds".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{3,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="AnyBICIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">AnyBICIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ISONormalisedDateTime">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ISONormalisedDateTime</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">an ISODateTime whereby all timezoned dateTime values are UTC.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:dateTime">
+			<xs:pattern value=".*Z"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ISINIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ISINIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">International Securities Identification Number (ISIN).  A numbering system designed by the United Nation's International Organisation for Standardisation (ISO). The ISIN is composed of a 2-character prefix representing the country of issue, followed by the national security number (if one exists), and a check digit. Each country has a national numbering agency that assigns ISIN numbers for securities in that country.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z0-9]{12,12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Max16NumericText">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Max16NumericText</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a numeric string with a maximum length of 5 digits.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{1,16}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Max5NumericText">
+		<xs:annotation>
+			<xs:documentation>Max5NumericText</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{1,5}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ProcessingPosition3Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ProcessingPosition3Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice of format for the processing position.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="Cd" type="cst2s:ProcessingPosition3Code">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Code</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Processing position expressed as an ISO 20022 code.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="ProcessingPosition3Code">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ProcessingPosition3Code</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies the processing position.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="AFTE">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">After</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies that the transaction/instruction is to be executed after the linked transaction/instruction.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="BEFO">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Before</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies that the transaction/instruction is to be executed before the linked transaction/instruction.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="INFO">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Information</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies that the transactions/instructions are linked for information purposes only.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="WITH">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">With</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies that the transaction/instruction is to be executed with the linked transaction/instruction.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ReceiveDelivery1Code">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ReceiveDelivery1Code</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies whether the settlement transaction is a delivery or receipt.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="DELI">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Delivery</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Financial instruments will be debited from the safekeeping account.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="RECE">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Receive</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Financial instruments will be credited to the safekeeping account.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RestrictedFINDecimalNumber">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINDecimalNumber</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Number of objects represented as a decimal number, for example, 0.75 or 45.6.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:totalDigits value="14"/>
+			<xs:fractionDigits value="14"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="RestrictedFINActiveCurrencyAndAmount">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINActiveCurrencyAndAmount</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">A number of monetary units specified in an active currency where the unit of currency is explicit and compliant with ISO 4217.</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="cst2s:RestrictedFINActiveCurrencyAndAmount_SimpleType">
+				<xs:attribute name="Ccy" type="cst2s:ActiveCurrencyCode" use="required">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Currency</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Medium of exchange of value.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="RestrictedFINActiveCurrencyAndAmount_SimpleType">
+		<xs:restriction base="xs:decimal">
+			<xs:minInclusive value="0"/>
+			<xs:totalDigits value="14"/>
+			<xs:fractionDigits value="5"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RestrictedFINXMax140Text">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINXMax140Text</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a character string with a maximum length of 140 characters limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + .</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="140"/>
+			<xs:pattern value="[0-9a-zA-Z/\-\?:\(\)\.\n\r,&apos;\+ ]{1,140}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RestrictedFINXMax210Text">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINXMax210Text</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a character string with a maximum length of 140 characters limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + .</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="210"/>
+			<xs:pattern value="[0-9a-zA-Z/\-\?:\(\)\.\n\r,&apos;\+ ]{1,210}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RestrictedFINXMax16Text">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINXMax16Text</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a character string with a maximum length of 16 characters. It has a pattern that disables the use of characters that is not part of the character set X, that is, that is not a-z A-Z / - ? : ( ) . , ‘ + , and disable the use of slash "/" at the beginning and end of line and double slash "//" within the line.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="16"/>
+			<xs:pattern value="[0-9a-zA-Z/\-\?:\(\)\.\n\r,&apos;\+ ]{1,16}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RestrictedFINXMax35Text">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINXMax35Text</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a character string with a maximum length of 35 characters limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + .</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="35"/>
+			<xs:pattern value="[0-9a-zA-Z/\-\?:\(\)\.\n\r,&apos;\+ ]{1,35}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RestrictedFINXMax50Text">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RestrictedFINXMax50Text</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a character string with a maximum length of 35 characters limited to character set X, that is, a-z A-Z / - ? : ( ) . , ‘ + .</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="50"/>
+			<xs:pattern value="[0-9a-zA-Z/\-\?:\(\)\.\n\r,&apos;\+ ]{1,50}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PosTypType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Position Type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="cst2s:MaxChar4Typ">
+			<xs:enumeration value="COLI"/>
+			<xs:enumeration value="COLO"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

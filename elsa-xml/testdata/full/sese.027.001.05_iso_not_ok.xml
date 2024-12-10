@@ -1,0 +1,21 @@
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:sese.027.001.05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:sese.027.001.05 file:///C:/Users/hs061/OneDrive%20-%20Deutsche%20B%C3%B6rse%20AG/Schemas/ISO/sese.027.001.05.xsd">
+	<SctiesTxCxlReqStsAdvc>
+		<CxlReqRef>
+		</CxlReqRef>
+		<TxId>
+			<PrcrTxId>SD148KA0FXSD6C06</PrcrTxId>
+			<AcctOwnrTxId>
+				<SctiesSttlmTxId>
+					<TxId>NONREF</TxId>
+					<SctiesMvmntTp>DELI</SctiesMvmntTp>
+					<Pmt>APMT</Pmt>
+				</SctiesSttlmTxId>
+			</AcctOwnrTxId>
+		</TxId>
+		<PrcgSts>
+			<Canc>
+				<NoSpcfdRsn>NORE</NoSpcfdRsn>
+			</Canc>
+		</PrcgSts>
+	</SctiesTxCxlReqStsAdvc>
+</Document>

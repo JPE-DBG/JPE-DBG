@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2014 (http://www.altova.com) by Arnaud Hocevar (clearstream service lux) -->
+<xs:schema xmlns:tsmc="tsmc.schema.t2si" xmlns:t2s="t2s.data.typ.t2si" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="tsmc.schema.t2si" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:import namespace="t2s.data.typ.t2si" schemaLocation="T2SDataTyp.xsd"/>
+	<xs:element name="T2SSctiesMntncConfMsg" type="tsmc:T2SSctiesMntncConfMsgType">
+		<xs:annotation>
+			<xs:documentation>Root element T2S Securities Maintenance Confirmation Message</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!--Sourced from reda.008 reda.029 reda.030 reda.047-->
+	<!--Local Types-->
+	<xs:simpleType name="MsgFctType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Message Function Type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="t2s:RestrictedFINXMax30Text">
+			<xs:enumeration value="CREATE SECURITY"/>
+			<xs:enumeration value="UPDATE SECURITY"/>
+			<xs:enumeration value="DELETE SECURITY"/>
+			<xs:enumeration value="CREATE SECURITY CSD LINK"/>
+			<xs:enumeration value="UPDATE SECURITY CSD LINK"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="PrcgRsnType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Processing Reasons Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="PrcgRsnCd" type="t2s:Exact4AlphaNumericText">
+				<xs:annotation>
+					<xs:documentation>Processing Reason Code</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AddtlRsnInf" type="t2s:RestrictedFINXMax210Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Additional Reason Information</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T2SSctiesMntncConfMsgType">
+		<xs:annotation>
+			<xs:documentation>Complex Type T2S Securities Maintenance Confirmation Message Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CreTmStmp" type="t2s:ISODateTime">
+				<xs:annotation>
+					<xs:documentation>Creation Timestamp</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TechMsgId" type="t2s:RestrictedFINXMax16Text"/>
+			<xs:element name="MsgFct" type="tsmc:MsgFctType">
+				<xs:annotation>
+					<xs:documentation>Message Function</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReqMsgId" type="t2s:RestrictedFINXMax16Text">
+				<xs:annotation>
+					<xs:documentation>Request Message Identification</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ISIN" type="t2s:ISINIdentifier" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>ISIN</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PrcgStsCd" type="tsmc:Exact4AlphaNumericText_Status_T2S">
+				<xs:annotation>
+					<xs:documentation>Processing Status Code</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PrcgRsns" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Processing Reason Codes</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="PrcgRsn" type="tsmc:PrcgRsnType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="SctyCSDLkId" type="tsmc:SecurityCSDLink2" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityCSDLinkIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Provides a unique and unambiguous identification for the Security CSD Link.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Imported T2S Types-->
+	<xs:simpleType name="Exact4AlphaNumericText_Status_T2S">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Exact4AlphaNumericText</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies an alphanumeric string with a length of 4 characters.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[a-zA-Z0-9]{4}"/>
+			<xs:enumeration value="COMP">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Completed</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="QUED">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Queued</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="REJT">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rejected</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="DateAndDateTimeChoice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DateAndDateTimeChoice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between a date or a date and time format.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="Dt" type="t2s:ISODate">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Date</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Specified date.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IssuanceAccount1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">IssuanceAccount1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Defines the account to or from which a securities entry is made and the usage type.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="IssncAcct" type="tsmc:SecuritiesAccount13">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceAccount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Account to or from which a securities entry is made.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PmryAcctInd" type="t2s:YesNoIndicator">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PrimaryAccountIndicator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines if the related issuance account is the primary account or not.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IssuerOrInvestor1choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">IssuerOrInvestor1choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Defines how the CSD is linked to the security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="IssrCSD" type="tsmc:SystemPartyIdentification1Choice">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">IssuerCSD</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">CSD Issuer of a security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="InvstrCSD" type="tsmc:SystemPartyIdentification1Choice">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">InvestorCSD</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">CSD Investor of a security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PartyIdentification71Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">PartyIdentification71Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between different formats for the identification of a party.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="AnyBIC" type="t2s:AnyBICIdentifier">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">AnyBIC</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecurityCSDLink2">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityCSDLink2</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Defines how the CSD is linked to the security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FinInstrmId" type="tsmc:SecurityIdentification14">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identification of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssrInvstrCSD" type="tsmc:IssuerOrInvestor1choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuerInvestorCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">CSD Issuer of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TechIssrCSD" type="tsmc:SystemPartyIdentification1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TechnicalIssuerCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Technical issuer of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SctyMntnc" type="t2s:YesNoIndicator" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityMaintenance</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies if the involved CSD (issuer/technical issuer/investor) is also the maintainer of related reference data.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssncAcct" type="tsmc:IssuanceAccount1" minOccurs="0" maxOccurs="10">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceAccount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Account to or from which a securities entry is made.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="VldFr" type="tsmc:DateAndDateTimeChoice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ValidFrom</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the date since when the CSD is linked to the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="VldTo" type="tsmc:DateAndDateTimeChoice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ValidTo</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the date until when the CSD is linked to the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecuritiesAccount13">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecuritiesAccount13</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Account to or from which a securities entry is made.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Id" type="t2s:RestrictedFINXMax35Text">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unambiguous identification for the account between the account owner and the account servicer.”</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecurityIdentification14">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityIdentification14</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Identification of a security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ISIN" type="t2s:ISINIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISIN</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">International Securities Identification Number (ISIN).  A numbering system designed by the United Nation's International Organisation for Standardisation (ISO). The ISIN is composed of a 2-character prefix representing the country of issue, followed by the national security number (if one exists), and a check digit. Each country has a national numbering agency that assigns ISIN numbers for securities in that country.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification1Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between an identification of a party or a combination of the responsible party identification and the business identifier.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="OrgId" type="tsmc:PartyIdentification71Choice">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">OrganisationIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Provides the identification of a party.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="CmbndId" type="tsmc:SystemPartyIdentification3">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">CombinedIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Identifies the party with the combined identification of both the responsible entity and the party itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification3">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification3</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Unique identification to unambiguously identify the party within the system.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="RltdPtyId" type="t2s:BICFIIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RelatedPartyIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identification to unambiguously identify the party within the system.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RspnsblPtyId" type="t2s:BICFIIdentifier">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ResponsiblePartyIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identification of the party responsible for the maintenance of the party reference data.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2013 (http://www.altova.com) by Arnaud HOCEVAR (CLEARSTREAM SERVICE LUX.) -->
+<xs:schema xmlns:cst2s="cst2s.schema.clearstream" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:t2s="urn:iso:std:iso:20022:tech:xsd:head.001.001.01" targetNamespace="cst2s.schema.clearstream" elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <!-- other embedded messages -->
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:admi.006.001.01" schemaLocation="ISO_T2S_Xml/admi.006.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:admi.007.001.01" schemaLocation="ISO_T2S_Xml/admi.007.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:camt.019.001.07" schemaLocation="ISO_T2S_Xml/camt.019.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08" schemaLocation="ISO_T2S_Xml/camt.053.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT4camt.076.001.01" schemaLocation="ISO_T2S_Xml/camt.076.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT6camt.077.001.01" schemaLocation="ISO_T2S_Xml/camt.077.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.006.001.01" schemaLocation="ISO_T2S_Xml/reda.006.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.007.001.01" schemaLocation="ISO_T2S_Xml/reda.007.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.008.001.01" schemaLocation="ISO_T2S_Xml/reda.008.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT4reda.009.001.01" schemaLocation="ISO_T2S_Xml/reda.009.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT3reda.010.001.01" schemaLocation="ISO_T2S_Xml/reda.010.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT5reda.012.001.01" schemaLocation="ISO_T2S_Xml/reda.012.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.013.001.01" schemaLocation="ISO_T2S_Xml/reda.013.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.014.001.01" schemaLocation="ISO_T2S_Xml/reda.014.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.015.001.01" schemaLocation="ISO_T2S_Xml/reda.015.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.016.001.01" schemaLocation="ISO_T2S_Xml/reda.016.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.017.001.01" schemaLocation="ISO_T2S_Xml/reda.017.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT5reda.018.001.01" schemaLocation="ISO_T2S_Xml/reda.018.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT5reda.019.001.01" schemaLocation="ISO_T2S_Xml/reda.019.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT5reda.020.001.01" schemaLocation="ISO_T2S_Xml/reda.020.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT7reda.021.001.01" schemaLocation="ISO_T2S_Xml/reda.021.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.022.001.01" schemaLocation="ISO_T2S_Xml/reda.022.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT5reda.023.001.01" schemaLocation="ISO_T2S_Xml/reda.023.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.029.001.01" schemaLocation="ISO_T2S_Xml/reda.029.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.030.001.01" schemaLocation="ISO_T2S_Xml/reda.030.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.031.001.01" schemaLocation="ISO_T2S_Xml/reda.031.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT4reda.032.001.01" schemaLocation="ISO_T2S_Xml/reda.032.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT3reda.035.001.01" schemaLocation="ISO_T2S_Xml/reda.035.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:reda.041.001.01" schemaLocation="ISO_T2S_Xml/reda.041.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT4reda.045.001.01" schemaLocation="ISO_T2S_Xml/reda.045.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT4reda.046.001.01" schemaLocation="ISO_T2S_Xml/reda.046.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT4reda.047.001.01" schemaLocation="ISO_T2S_Xml/reda.047.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT2reda.049.001.01" schemaLocation="ISO_T2S_Xml/reda.049.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT2reda.050.001.01" schemaLocation="ISO_T2S_Xml/reda.050.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT2reda.051.001.01" schemaLocation="ISO_T2S_Xml/reda.051.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.002.001.10" schemaLocation="ISO_T2S_Xml/semt.002.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.013.001.04" schemaLocation="ISO_T2S_Xml/semt.013.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.014.001.06" schemaLocation="ISO_T2S_Xml/semt.014.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.015.001.07" schemaLocation="ISO_T2S_Xml/semt.015.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.016.001.07" schemaLocation="ISO_T2S_Xml/semt.016.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.017.001.09" schemaLocation="ISO_T2S_Xml/semt.017.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.018.001.10" schemaLocation="ISO_T2S_Xml/semt.018.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:semt.020.001.05" schemaLocation="ISO_T2S_Xml/semt.020.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT7semt.026.001.01" schemaLocation="ISO_T2S_Xml/semt.026.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT9semt.027.001.01" schemaLocation="ISO_T2S_Xml/semt.027.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT5semt.028.001.01" schemaLocation="ISO_T2S_Xml/semt.028.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT6semt.029.001.01" schemaLocation="ISO_T2S_Xml/semt.029.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:DRAFT6semt.034.001.01" schemaLocation="ISO_T2S_Xml/semt.034.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.020.001.06" schemaLocation="ISO_T2S_Xml/sese.020.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.022.001.05" schemaLocation="ISO_T2S_Xml/sese.022.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.023.001.09" schemaLocation="ISO_T2S_Xml/sese.023.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.024.001.10" schemaLocation="ISO_T2S_Xml/sese.024.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.025.001.09" schemaLocation="ISO_T2S_Xml/sese.025.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.027.001.05" schemaLocation="ISO_T2S_Xml/sese.027.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.028.001.08" schemaLocation="ISO_T2S_Xml/sese.028.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.029.001.04" schemaLocation="ISO_T2S_Xml/sese.029.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.030.001.08" schemaLocation="ISO_T2S_Xml/sese.030.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.031.001.08" schemaLocation="ISO_T2S_Xml/sese.031.xsd"/>
+    <xs:import namespace="urn:iso:std:iso:20022:tech:xsd:sese.032.001.09" schemaLocation="ISO_T2S_Xml/sese.032.xsd"/>
+    <xs:import namespace="urn:eurosystem:xsd:DRAFT2supl.021.001.01" schemaLocation="ISO_T2S_Xml/supl.021.xsd"/>
+    <xs:redefine schemaLocation="CST2SMsg.xsd">
+        <xs:group name="origMsg">
+            <xs:sequence>
+                <xs:any namespace="urn:iso:std:iso:20022:tech:xsd:admi.006.001.01
+urn:iso:std:iso:20022:tech:xsd:admi.007.001.01
+urn:iso:std:iso:20022:tech:xsd:camt.019.001.07
+urn:iso:std:iso:20022:tech:xsd:camt.053.001.08
+urn:iso:std:iso:20022:tech:xsd:DRAFT4camt.076.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT6camt.077.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.006.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.007.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.008.001.01
+urn:eurosystem:xsd:DRAFT4reda.009.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT3reda.010.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT5reda.012.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.013.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.014.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.015.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.016.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.017.001.01
+urn:eurosystem:xsd:DRAFT5reda.018.001.01
+urn:eurosystem:xsd:DRAFT5reda.019.001.01
+urn:eurosystem:xsd:DRAFT5reda.020.001.01
+urn:eurosystem:xsd:DRAFT7reda.021.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.022.001.01
+urn:eurosystem:xsd:DRAFT5reda.023.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.029.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT2reda.030.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.031.001.01
+urn:eurosystem:xsd:DRAFT4reda.032.001.01
+urn:eurosystem:xsd:DRAFT3reda.035.001.01
+urn:iso:std:iso:20022:tech:xsd:reda.041.001.01
+urn:eurosystem:xsd:DRAFT4reda.045.001.01
+urn:eurosystem:xsd:DRAFT4reda.046.001.01
+urn:eurosystem:xsd:DRAFT4reda.047.001.01
+urn:eurosystem:xsd:DRAFT2reda.049.001.01
+urn:eurosystem:xsd:DRAFT2reda.050.001.01
+urn:eurosystem:xsd:DRAFT2reda.051.001.01
+urn:iso:std:iso:20022:tech:xsd:semt.002.001.10
+urn:iso:std:iso:20022:tech:xsd:semt.013.001.04
+urn:iso:std:iso:20022:tech:xsd:semt.014.001.06
+urn:iso:std:iso:20022:tech:xsd:semt.015.001.07
+urn:iso:std:iso:20022:tech:xsd:semt.016.001.07
+urn:iso:std:iso:20022:tech:xsd:semt.017.001.09
+urn:iso:std:iso:20022:tech:xsd:semt.018.001.10
+urn:iso:std:iso:20022:tech:xsd:semt.020.001.05
+urn:iso:std:iso:20022:tech:xsd:DRAFT7semt.026.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT9semt.027.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT5semt.028.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT6semt.029.001.01
+urn:iso:std:iso:20022:tech:xsd:DRAFT6semt.034.001.01
+urn:iso:std:iso:20022:tech:xsd:sese.020.001.06
+urn:iso:std:iso:20022:tech:xsd:sese.022.001.05
+urn:iso:std:iso:20022:tech:xsd:sese.023.001.09
+urn:iso:std:iso:20022:tech:xsd:sese.024.001.10
+urn:iso:std:iso:20022:tech:xsd:sese.025.001.09
+urn:iso:std:iso:20022:tech:xsd:sese.027.001.05
+urn:iso:std:iso:20022:tech:xsd:sese.028.001.08
+urn:iso:std:iso:20022:tech:xsd:sese.029.001.04
+urn:iso:std:iso:20022:tech:xsd:sese.030.001.08
+urn:iso:std:iso:20022:tech:xsd:sese.031.001.08
+urn:iso:std:iso:20022:tech:xsd:sese.032.001.09
+urn:eurosystem:xsd:DRAFT2supl.021.001.01" processContents="strict"/>
+            </xs:sequence>
+        </xs:group>
+    </xs:redefine>
+</xs:schema>
+

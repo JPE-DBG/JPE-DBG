@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2014 sp1 (x64) (http://www.altova.com) by Arnaud Hocevar (clearstream service lux) -->
+<xs:schema xmlns:tsrr="tsrr.schema.t2si" xmlns:t2s="t2s.data.typ.t2si" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="tsrr.schema.t2si" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:import namespace="t2s.data.typ.t2si" schemaLocation="T2SDataTyp.xsd"/>
+	<xs:element name="T2SSctiesRcncltnRspnMsg" type="tsrr:T2SSctiesRcncltnRspnMsgType">
+		<xs:annotation>
+			<xs:documentation>Root element T2S Securities Reconciliation Response Message</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!--Sourced from reda.009 reda.012-->
+	<!--Local Types-->
+	<xs:complexType name="FinInstrmAttrbtsType">
+		<xs:annotation>
+			<xs:documentation>Complex Type FInancial Instrument Attributes Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FinInstrmNms" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="FinInstrmNm" type="tsrr:FinancialInstrumentName1" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentName</xs:documentation>
+								<xs:documentation source="Definition" xml:lang="EN">Name of the security.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="ClssfctnFinInstrm" type="t2s:CFIIdentifier" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClassificationFinancialInstrument</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">ISO 10962 Classification of Financial Instrument (CFI)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IsseDt" type="t2s:ISODate" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssueDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date at which the security was made available.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="XpryDt" type="t2s:ISODate" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ExpiryDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date on which a privilege expires.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FinInstrmIdVldties" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="FinInstrmIdVldty" type="tsrr:FinancialInstrumentIdentificationValidity1" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentIdentificationValidity</xs:documentation>
+								<xs:documentation source="Definition" xml:lang="EN">Specifies the date from which the financial instrument identification is valid.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Rstrctns" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Rstrctn" type="tsrr:SecurityRestriction1" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation source="Name" xml:lang="EN">Restriction</xs:documentation>
+								<xs:documentation source="Definition" xml:lang="EN">Regulatory restriction(s) linked to the security.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="SctiesQtyTp" type="tsrr:SettlementUnitType2Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecuritiesQuantityType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Choice between formats for the quantity of security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MinDnmtn" type="tsrr:FinancialInstrumentQuantity1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MinimumDenomination</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicates the minimum quantity (unit or nominal) of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MinMltplQty" type="tsrr:FinancialInstrumentQuantity1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MinimumMultipleQuantity</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Minimum multiple quantity (unit or nominal) of securities.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DevtgSttlmUnits" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DevtgSttlmUnit" type="tsrr:FinancialInstrumentQuantity1Choice" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation source="Name" xml:lang="EN">DeviatingSettlementUnit</xs:documentation>
+								<xs:documentation source="Definition" xml:lang="EN">Minimum quantity of securities that can be purchased without incurring a larger fee. For example, if the round lot size is 100 and the trade is for 125  shares, then 100 will be processed without a fee and the remaining 25 will incur a service fee for being an odd lot size.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="CtryOfIsse" type="t2s:CountryCode" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CountryOfIssue</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Country where a security is issued by the issuer or its agent.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DnmtnCcy" type="t2s:CurrencyCode" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DenominationCurrency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency in which a security is issued or redenominated.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FinInstrmMktSpcfcAttrType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Financial Instrument Market Specific Attributes Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FinInstrmId" type="tsrr:SecurityIdentification14"/>
+			<xs:element name="MktSpcfcAttr" type="tsrr:MktSpcfcAttrType" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MarketSpecificAttribute</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Additional attributes defined by a central security depositary for a party.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FinInstrmType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Financial Instrument Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FinInstrmId" type="tsrr:SecurityIdentification14"/>
+			<xs:element name="FinInstrmAttrbts" type="tsrr:FinInstrmAttrbtsType" minOccurs="0"/>
+			<xs:element name="SctyCSDLks" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="SctyCSDLk" type="tsrr:SecurityCSDLink1" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>Security CSD Link Details</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MktSpcfcAttrType">
+		<xs:annotation>
+			<xs:documentation>Complex Type Market Specific Attribute Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Nm" type="t2s:RestrictedFINXMax35Text">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Name</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the name of the market-specific attribute.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Val" type="t2s:RestrictedFINXMax350Text">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Value</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the value of the market-specific attribute.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="T2SSctiesRcncltnRspnMsgType">
+		<xs:annotation>
+			<xs:documentation>Complex Type T2S Securities Reconciliation Response Message Type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="CreTmStmp" type="t2s:ISODateTime">
+				<xs:annotation>
+					<xs:documentation>Creation Timestamp</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TechMsgId" type="t2s:RestrictedFINXMax16Text"/>
+			<xs:element name="Pgntn" type="tsrr:Pagination"/>
+			<xs:element name="QryRef" type="t2s:RestrictedFINXMax16Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Query Reference</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MsgFct" type="tsrr:MsgFctType">
+				<xs:annotation>
+					<xs:documentation>Message Function</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="FinInstrms" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Financial Instruments</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="FinInstrm" type="tsrr:FinInstrmType" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Financial Instrument</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="BizErr" type="tsrr:BusinessError1">
+					<xs:annotation>
+						<xs:documentation>Business Errors</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="OprlErrs">
+					<xs:annotation>
+						<xs:documentation>Operational Errors</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="OprlErr" type="tsrr:ErrorHandling3" maxOccurs="unbounded">
+								<xs:annotation>
+									<xs:documentation>Operational Error</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="MktSpcfcAttrs" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Market Specific Attributes</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="PlcAndNm" type="t2s:Max350Text">
+							<xs:annotation>
+								<xs:documentation source="Name" xml:lang="EN">PlaceAndName</xs:documentation>
+								<xs:documentation source="Definition" xml:lang="EN">Unambiguous reference to the location where the supplementary data must be inserted in the message instance.In the case of XML, this is expressed by a valid XPath.          </xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="FinInstrmMktSpcfcAttr" type="tsrr:FinInstrmMktSpcfcAttrType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="MsgFctType">
+		<xs:annotation>
+			<xs:documentation>Simple Type Message Function Type</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="t2s:RestrictedFINXMax30Text">
+			<xs:enumeration value="DAILY ACTIVITY REPORT"/>
+			<xs:enumeration value="MONTHLY REPORT"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--Imported T2S Types-->
+	<xs:complexType name="BusinessError1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">BusinessError1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Provides the business error details.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FinInstrmId" type="tsrr:SecurityIdentification14">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Way(s) of identifying the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BizErr" type="tsrr:ErrorHandling3" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BusinessError</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Provides the business error.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DateAndDateTimeChoice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DateAndDateTimeChoice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between a date or a date and time format.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="Dt" type="t2s:ISODate" nillable="true">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Date</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Specified date.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DateTimePeriodDetails1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DateTimePeriodDetails1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Time span defined by a start date and time, and an end date and time.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FrDtTm" type="t2s:ISODateTime" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FromDateTime</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date and time at which the range starts.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ToDtTm" type="t2s:ISODateTime" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ToDateTime</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date and time at which the range ends.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ErrorHandling1Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ErrorHandling1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies the choice between the listed and the proprietary error codes.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="Prtry" type="t2s:Max4AlphaNumericText">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Proprietary</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Specification of the error, in free format.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ErrorHandling3">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ErrorHandling3</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies the error resulting from the processing of a request.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Err" type="tsrr:ErrorHandling1Choice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Error</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specification of the error, in coded or proprietary form.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Desc" type="t2s:RestrictedFINXMax140Text" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Description</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specification of the error, in free format.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FinancialInstrumentIdentificationValidity1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentIdentificationValidity1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies the date from which the financial instrument identification is valid.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FinInstrmId" type="tsrr:SecurityIdentification14">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Way(s) of identifying the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ISINVldFr" type="t2s:ISODate" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISINValidFrom</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the date from which the instrument code is valid. This date can be before the actual issue date of an instrument for 'when-issued' securities, but may not be a date in the future for a new security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FinancialInstrumentName1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentName1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Name of the security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ISOShrtNm" type="t2s:RestrictedFINXMax35Text" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISOShortName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Short name of the security expressed as ISO 18773/18774.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ISOLngNm" type="t2s:RestrictedFINXMax350Text" nillable="true" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISOLongName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name of the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="VldFr" type="tsrr:DateAndDateTimeChoice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ValidFrom</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the date since when the name of the security is valid.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FinancialInstrumentQuantity1Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">FinancialInstrumentQuantity1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between formats for the quantity of security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="Unit" type="t2s:RestrictedFINDecimalNumber" nillable="true">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Unit</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Quantity expressed as a number, eg, a number of shares.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="FaceAmt" type="t2s:RestrictedFINImpliedCurrencyAndAmount" nillable="true">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">FaceAmount</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Quantity expressed as an amount representing the face amount, ie, the principal, of a debt instrument.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="NewUnitVal" type="t2s:RestrictedFINXMax350Text" nillable="true">
+					<xs:annotation>
+						<xs:documentation>New Unit Value</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GenericIdentification40">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">GenericIdentification40</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Information related to an identification, for example, party identification or account identification.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Id" type="t2s:Exact4AlphaNumericText" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Proprietary information, often a code, issued by the data source scheme issuer.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Issr" type="t2s:Max4AlphaNumericText" fixed="T2S" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Issuer</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Entity that assigns the identification.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SchmeNm" type="t2s:Max4AlphaNumericText" fixed="RT" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SchemeName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Short textual description of the scheme.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IssuanceAccount1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">IssuanceAccount1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Defines the account to or from which a securities entry is made and the usage type.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="IssncAcct" type="tsrr:SecuritiesAccount13">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceAccount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Account to or from which a securities entry is made.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PmryAcctInd" type="t2s:YesNoIndicator" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PrimaryAccountIndicator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines if the related issuance account is the primary account or not.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Pagination">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Pagination</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Number used to sequence pages when it is not possible for data to be conveyed in a single message and the data has to be split across several pages (messages).</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="PgNb" type="tsrr:Max5NumericText">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PageNumber</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Page number.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LastPgInd" type="t2s:YesNoIndicator">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LastPageIndicator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicates the last page.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PartyIdentification71Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">PartyIdentification71Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between different formats for the identification of a party.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="AnyBIC" type="t2s:AnyBICIdentifier" nillable="true">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">AnyBIC</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Code allocated to a financial or non-financial institution by the ISO 9362 Registration Authority, as described in ISO 9362 "Banking - Banking telecommunication messages - Business identifier code (BIC)".</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecuritiesAccount13">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecuritiesAccount13</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Account to or from which a securities entry is made.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Id" type="t2s:RestrictedFINXMax35Text" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unambiguous identification for the account between the account owner and the account servicer.â€</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecurityCSDLink1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityCSDLink1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Defines how the CSD is linked to the security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="VldFr" type="tsrr:DateAndDateTimeChoice">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ValidFrom</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the date since when the CSD is linked to the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="VldTo" type="tsrr:DateAndDateTimeChoice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ValidTo</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the date until when the CSD is linked to the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SctyMntnc" type="t2s:YesNoIndicator" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityMaintenance</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specify if the involved CSD (issuer/technical issuer/investor) is also the maintainer of related reference data.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssrCSD" type="tsrr:SystemPartyIdentification1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuerCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">CSD Issuer of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InvstrCSD" type="tsrr:SystemPartyIdentification1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InvestorCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">CSD Investor of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TechIssrCSD" type="tsrr:SystemPartyIdentification1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TechnicalIssuerCSD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Technical issuer of a security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssncAcct" type="tsrr:IssuanceAccount1" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceAccount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Account to or from which a securities entry is made.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecurityIdentification14">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityIdentification14</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Identification of a security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ISIN" type="t2s:ISINIdentifier" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ISIN</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">International Securities Identification Number (ISIN).  A numbering system designed by the United Nation's International Organisation for Standardisation (ISO). The ISIN is composed of a 2-character prefix representing the country of issue, followed by the national security number (if one exists), and a check digit. Each country has a national numbering agency that assigns ISIN numbers for securities in that country.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecurityRestriction1">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityRestriction1</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Restrictions applicable to the security.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="FctvPrd" type="tsrr:DateTimePeriodDetails1" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EffectivePeriod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Period during which the restriction applies.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RstrctnTp" type="tsrr:SecurityRestrictionType1Choice" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RestrictionType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of the restriction, for example, selling restriction, buying restriction, placing restriction.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SecurityRestrictionType1Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SecurityRestrictionType1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between the type of restriction.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="PrtryRstrctn" type="tsrr:GenericIdentification40">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">ProprietaryRestriction</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Type of the restriction, for example, selling restriction, buying restriction, placing restriction.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SettlementUnitType2Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SettlementUnitType2Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice of format for settlement unit type.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="Cd" type="tsrr:SettlementUnitType1Code" nillable="true">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">Code</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Settlement unit type expressed as an ISO 20022 code.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification1Choice">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification1Choice</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Choice between an identification of a party or a combination of the responsible party identification and the business identifier.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="OrgId" type="tsrr:PartyIdentification71Choice">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">OrganisationIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Provides the identification of a party.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="CmbndId" type="tsrr:SystemPartyIdentification3">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">CombinedIdentification</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Identifies the party with the combined identification of both the responsible entity and the party itself.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemPartyIdentification3">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemPartyIdentification3</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Unique identification to unambiguously identify the party within the system.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="RltdPtyId" type="t2s:BICFIIdentifier" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RelatedPartyIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identification to unambiguously identify the party within the system.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RspnsblPtyId" type="t2s:BICFIIdentifier" nillable="true">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ResponsiblePartyIdentification</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unique identification of the party responsible for the maintenance of the party reference data.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="Max5NumericText">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Max5NumericText</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a numeric string with a maximum length of 5 digits.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{1,5}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SettlementUnitType1Code">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SettlementUnitType1Code</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Type of settlement foreseen for the security.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="FAMT">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FaceAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Represent the face amount, for example the principal of a debt instrument.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="UNIT">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Unit</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Represent the unit as a number, for example a number of shares.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
