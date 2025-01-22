@@ -1,52 +1,103 @@
 {{define "styles"}}
 <style>
 .method {
-  background-color: #58A4FC;
   color: white;
   padding: 2px 6px;
   border-radius: 3px;
   font-family: Arial, sans-serif;
   font-weight: bold;
   display: inline-block;
-  width: 80px; /* Adjust width to fit the longest method */
+  width: 80px;
   text-align: center;
-  font-size: 14px; /* Align font size to Swagger */
+  font-size: 16px;
+  line-height: 22px; /* Ensure line-height matches font-size */
+}
+
+.method-get {
+  background-color: #61affe; /* Blue for GET */
+}
+
+.method-post {
+  background-color: #49cc90; /* Green for POST */
+}
+
+.method-put {
+  background-color: #fca130; /* Orange for PUT */
+}
+
+.method-delete {
+  background-color: #f93e3e; /* Red for DELETE */
+}
+
+.method-patch {
+  background-color: #50e3c2; /* Teal for PATCH */
 }
 
 .api {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px; /* Further reduce margin between APIs */
-  border: 1px solid red; /* Add border for debugging */
-  width: auto; /* Ensure the width is auto */
+  display: flex; 
+  align-items: center; /* Ensure items are centered */
+  margin-bottom: 2px;
+  /*border: 1px solid red; /* to debug borders */
+}
+
+.api-get {
+  background-color: #e0f2ff; /* Lighter blue for GET */
+}
+
+.api-post {
+  background-color: #e0f7e9; /* Lighter green for POST */
+}
+
+.api-put {
+  background-color: #fff4e0; /* Lighter orange for PUT */
+}
+
+.api-delete {
+  background-color: #ffe0e0; /* Lighter red for DELETE */
+}
+
+.api-patch {
+  background-color: #e0f7f4; /* Lighter teal for PATCH */
 }
 
 .path {
-  font-family: 'Source Code Pro', monospace; /* Change font to Source Code Pro */
+  font-family: 'Source Code Pro', monospace;
   font-weight: bold;
   margin-left: 10px;
-  font-size: 14px; /* Align font size to Swagger */
-  flex-shrink: 0; /* Prevent the path from shrinking */
+  font-size: 16px;
+  line-height: 16px; /* Ensure line-height matches font-size */
 }
 
 .description {
-  font-family: 'Source Code Pro', monospace; /* Change font to Source Code Pro */
+  font-family: 'Source Code Pro', monospace;
   font-style: italic;
-  margin-left: 5px; /* Further reduce margin between Path and Description */
+  margin-left: 10px;
   color: #888;
-  font-size: 12px; /* Align font size to Swagger */
+  font-size: 14px;
+  line-height: 16px; /* Ensure line-height matches font-size */
 }
 
 header {
-  background-color: #cae9f4; /* Light blue background */
+  background-color: #cae9f4;
   padding: 20px;
   border-radius: 5px;
-  font-family: 'Roboto', sans-serif; /* Change font to Roboto */
+  font-family: 'Roboto', sans-serif;
+  margin-bottom: 5px;
 }
 
 h1, h2, h3 {
-  font-family: 'Roboto', sans-serif; /* Change font to Roboto */
+  font-family: 'Roboto', sans-serif;
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  line-height: 1.1; /* Adjust line-height for better alignment */
 }
+
+section {
+  padding: 5px 5px; 
+  margin-bottom: 5px;
+  /* border: 1px solid green; /* to debug borders */
+}
+
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 {{end}}

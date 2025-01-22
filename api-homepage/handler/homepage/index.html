@@ -14,15 +14,7 @@
     {{ range .Sections }}
     <section id="{{ .Name | urlquery }}">
       <h2>{{ .Name }}</h2>
-      {{ range .APIs }}
-      <section id="{{ .Path }}" class="api">
-        <h3>
-          <span class="method">{{ .Method }}</span> 
-          <span class="path">{{ .Path }}</span>
-          <span class="description">{{ .Description }}</span>
-        </h3>
-      </section>
-      {{ end }}
+      {{ template "apis" . }}
     </section>
     {{ end }}
 

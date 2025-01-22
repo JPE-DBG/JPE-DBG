@@ -4,6 +4,7 @@ import (
 	"embed"
 	"html/template"
 	"net/http"
+	"strings"
 )
 
 //go:embed homepage/*.html
@@ -40,7 +41,14 @@ func NewHandler() *http.ServeMux {
 
 func (h handler) homepageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	tmpl, err := template.ParseFS(templates, "homepage/*.html")
+	tmpl, err := template.New("index.html").Funcs(template.FuncMap{
+		"methodClass": func(method string) string {
+			return "method-" + strings.ToLower(method)
+		},
+		"apiClass": func(method string) string {
+			return "api-" + strings.ToLower(method)
+		},
+	}).ParseFS(templates, "homepage/index.html", "homepage/apis.html", "homepage/styles.html")
 	if err != nil {
 		http.Error(w, "Unable to load template", http.StatusInternalServerError)
 		return

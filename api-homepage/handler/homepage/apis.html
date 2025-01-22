@@ -1,9 +1,11 @@
+{{define "apis"}}
 {{ range .APIs }}
-  <section id="{{ .Path }}" class="api">
+  <section id="{{ .Path }}" class="api {{ .Method | apiClass }}">
     <h3>
-      <span class="method">{{ .Method }}</span> 
+      <span class="method {{ .Method | methodClass }}">{{ .Method }}</span> 
       <span class="path">{{ .Path }}</span>
       <span class="description">{{ .Description }}</span>
     </h3>
   </section>
 {{ end }}
+{{end}}
