@@ -4,16 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+
+	"api-homepage/handler"
 )
 
-func mainHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World!")
-}
-
 func main() {
-	http.HandleFunc("/", mainHandler)
 	fmt.Println("Starting server on :10000")
-	if err := http.ListenAndServe(":10000", nil); err != nil {
+	if err := http.ListenAndServe(":10000", handler.NewHandler()); err != nil {
 		fmt.Println("Server failed to start:", err)
 		os.Exit(1)
 	}

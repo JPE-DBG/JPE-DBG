@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ .Info.Title }}</title>
+    {{ template "styles" . }}
+  </head>
+  <body>
+    <header>
+      <h1>{{ .Info.Title }}</h1>
+      <p>{{ .Info.Description }}</p>
+    </header>
+
+    {{ range .Sections }}
+    <section id="{{ .Name | urlquery }}">
+      <h2>{{ .Name }}</h2>
+      {{ range .APIs }}
+      <section id="{{ .Path }}" class="api">
+        <h3>
+          <span class="method">{{ .Method }}</span> 
+          <span class="path">{{ .Path }}</span>
+          <span class="description">{{ .Description }}</span>
+        </h3>
+      </section>
+      {{ end }}
+    </section>
+    {{ end }}
+
+    <footer>
+    </footer>
+  </body>
+</html>
