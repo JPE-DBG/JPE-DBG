@@ -13,19 +13,26 @@
   font-size: 14px; /* Align font size to Swagger */
 }
 
+.api {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px; /* Further reduce margin between APIs */
+  border: 1px solid red; /* Add border for debugging */
+  width: auto; /* Ensure the width is auto */
+}
+
 .path {
   font-family: 'Source Code Pro', monospace; /* Change font to Source Code Pro */
   font-weight: bold;
   margin-left: 10px;
-  display: inline-block;
-  width: 300px; /* Adjust width to fit the longest path */
   font-size: 14px; /* Align font size to Swagger */
+  flex-shrink: 0; /* Prevent the path from shrinking */
 }
 
 .description {
   font-family: 'Source Code Pro', monospace; /* Change font to Source Code Pro */
   font-style: italic;
-  margin-left: 10px; /* Adjust margin to be similar to the gap between Method and Path */
+  margin-left: 5px; /* Further reduce margin between Path and Description */
   color: #888;
   font-size: 12px; /* Align font size to Swagger */
 }
