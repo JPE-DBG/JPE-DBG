@@ -65,7 +65,7 @@ func (h handler) homepageHandler(w http.ResponseWriter, r *http.Request) {
 				Name: "Section 2",
 				APIs: []API{
 					{Method: "DELETE", Path: "/api/v1/resource4", Description: "Resource 4 endpoint"},
-					{Method: "PATCH", Path: "/api/v1/resource5", Description: "Resource 5 endpoint"},
+					{Method: "PATCH", Path: "/api/v1/resource5-wery-wery-long", Description: "Resource 5 endpoint"},
 					{Method: "GET", Path: "/api/v1/resource6", Description: "Resource 6 endpoint"},
 				},
 			},
