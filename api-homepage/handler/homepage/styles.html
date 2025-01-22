@@ -1,7 +1,7 @@
 {{define "styles"}}
 <style>
 .method {
-  background-color: #61affe;
+  background-color: #58A4FC;
   color: white;
   padding: 2px 6px;
   border-radius: 3px;
@@ -10,27 +10,36 @@
   display: inline-block;
   width: 80px; /* Adjust width to fit the longest method */
   text-align: center;
+  font-size: 14px; /* Align font size to Swagger */
 }
 
 .path {
-  font-family: Arial, sans-serif;
+  font-family: 'Source Code Pro', monospace; /* Change font to Source Code Pro */
   font-weight: bold;
   margin-left: 10px;
   display: inline-block;
   width: 300px; /* Adjust width to fit the longest path */
+  font-size: 14px; /* Align font size to Swagger */
 }
 
 .description {
-  font-family: Arial, sans-serif;
+  font-family: 'Source Code Pro', monospace; /* Change font to Source Code Pro */
   font-style: italic;
-  margin-left: 10px;
+  margin-left: 10px; /* Adjust margin to be similar to the gap between Method and Path */
   color: #888;
+  font-size: 12px; /* Align font size to Swagger */
 }
 
 header {
-  background-color: #add8e6; /* Light blue background */
+  background-color: #cae9f4; /* Light blue background */
   padding: 20px;
   border-radius: 5px;
+  font-family: 'Roboto', sans-serif; /* Change font to Roboto */
+}
+
+h1, h2, h3 {
+  font-family: 'Roboto', sans-serif; /* Change font to Roboto */
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 {{end}}
