@@ -1,11 +1,11 @@
-# Sese23Received
+# Sese23
 Producer: T2S Receiver
 Consumer: EventHandler
 
 ```json
 ```
 
-# Sese24Received
+# Sese24
 Producer: T2S Receiver
 Consumer: EventHandler
 
