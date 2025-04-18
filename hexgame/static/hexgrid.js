@@ -242,7 +242,7 @@ function drawGrid() {
                 color = '#ffd54f';
             }
             if (moveRange.some(t => t.col === col && t.row === row)) {
-                color = '#ffb74d';
+                color = 'rgba(255, 255, 255, 0.15)'; // transparent for move range
             }
             drawHex(x, y, hexSize, color);
             // Draw unit/building only on land
