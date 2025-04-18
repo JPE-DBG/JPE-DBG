@@ -21,7 +21,7 @@ type MoveRequest struct {
 }
 
 func mapHandler(w http.ResponseWriter, r *http.Request) {
-	tiles := generateMapV2(MapCols, MapRows)
+	tiles := generateMapV3(MapCols, MapRows)
 	resp := MapResponse{
 		Cols:  MapCols,
 		Rows:  MapRows,

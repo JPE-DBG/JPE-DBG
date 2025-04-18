@@ -31,7 +31,7 @@ type GameState struct {
 var gameState *GameState
 
 func newGameState(cols, rows int) *GameState {
-	tiles := generateMapV2(cols, rows)
+	tiles := generateMapV3(cols, rows)
 	return &GameState{
 		Cols:          cols,
 		Rows:          rows,

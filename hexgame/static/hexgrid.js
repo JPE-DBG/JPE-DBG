@@ -235,7 +235,7 @@ function drawGrid() {
             if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
             let tileType = gameState.tiles[col][row].type;
             let color = '#222';
-            if (tileType === 'land') color = (row + col) % 2 === 0 ? '#4fc3f7' : '#81c784';
+            if (tileType === 'land') color = '#81c784'; // Use only green for land
             else if (tileType === 'water') color = '#1976d2';
             else if (tileType === 'void') color = '#111';
             if (selectedTile && selectedTile.col === col && selectedTile.row === row) {

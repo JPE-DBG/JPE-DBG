@@ -157,6 +157,110 @@ func generateMapV2(cols, rows int) [][]Tile {
 	return fallback
 }
 
+// generateMapV3 creates a connected continent, no void mask, and no random void holes.
+func generateMapV3(cols, rows int) [][]Tile {
+	const minLandRatio = 0.20
+	maxAttempts := 15
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		tiles := make([][]Tile, cols)
+		for x := 0; x < cols; x++ {
+			tiles[x] = make([]Tile, rows)
+			for y := 0; y < rows; y++ {
+				tiles[x][y] = Tile{Type: "water"}
+			}
+		}
+		// Step 1: Seed a central landmass using random walk
+		centerX, centerY := cols/2, rows/2
+		landCount := 0
+		maxLand := int(float64(cols*rows) * 0.6)
+		x, y := centerX, centerY
+		tiles[x][y].Type = "land"
+		landCount++
+		for i := 0; i < maxLand; i++ {
+			dir := rand.Intn(6)
+			dx, dy := 0, 0
+			switch dir {
+			case 0:
+				dx = 1
+			case 1:
+				dx = -1
+			case 2:
+				dy = 1
+			case 3:
+				dy = -1
+			case 4:
+				dx, dy = 1, (x%2)*2-1
+			case 5:
+				dx, dy = -1, (x%2)*2-1
+			}
+			nx, ny := x+dx, y+dy
+			if nx >= 0 && nx < cols && ny >= 0 && ny < rows {
+				x, y = nx, ny
+				if tiles[x][y].Type != "land" {
+					tiles[x][y].Type = "land"
+					landCount++
+				}
+			}
+		}
+		// Step 2: Add noise to edges for natural shape
+		for x := 0; x < cols; x++ {
+			for y := 0; y < rows; y++ {
+				if tiles[x][y].Type == "land" {
+					for _, n := range hexNeighbors(x, y, cols, rows) {
+						nx, ny := n[0], n[1]
+						if tiles[nx][ny].Type == "water" && rand.Float64() < 0.25 {
+							tiles[nx][ny].Type = "land"
+							landCount++
+						}
+					}
+				}
+			}
+		}
+		// Step 3: Flood fill from center to ensure connectivity
+		visited := make([][]bool, cols)
+		for i := range visited {
+			visited[i] = make([]bool, rows)
+		}
+		queue := [][2]int{{centerX, centerY}}
+		visited[centerX][centerY] = true
+		connectedLand := 1
+		for len(queue) > 0 {
+			cx, cy := queue[0][0], queue[0][1]
+			queue = queue[1:]
+			for _, n := range hexNeighbors(cx, cy, cols, rows) {
+				nx, ny := n[0], n[1]
+				if !visited[nx][ny] && tiles[nx][ny].Type == "land" {
+					visited[nx][ny] = true
+					queue = append(queue, [2]int{nx, ny})
+					connectedLand++
+				}
+			}
+		}
+		// Convert unconnected land to water
+		for x := 0; x < cols; x++ {
+			for y := 0; y < rows; y++ {
+				if tiles[x][y].Type == "land" && !visited[x][y] {
+					tiles[x][y].Type = "water"
+					landCount--
+				}
+			}
+		}
+		// Step 4: Check land ratio
+		if float64(landCount)/float64(cols*rows) >= minLandRatio {
+			return tiles
+		}
+	}
+	// fallback: return all water
+	fallback := make([][]Tile, cols)
+	for x := 0; x < cols; x++ {
+		fallback[x] = make([]Tile, rows)
+		for y := 0; y < rows; y++ {
+			fallback[x][y] = Tile{Type: "water"}
+		}
+	}
+	return fallback
+}
+
 func ensureLandConnected(tiles [][]Tile, cols, rows int) {
 	visited := make([][]bool, cols)
 	for i := range visited {
