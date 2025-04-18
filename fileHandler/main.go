@@ -28,72 +28,75 @@ type ReadResult struct {
 
 // BatchProcessor reads files one by one but processes them in batches
 type BatchProcessor struct {
-	handler      messageHandler
-	batchSize    int
-	logger       *zap.SugaredLogger
-	currentBatch [][]byte
-	targets      []string
-	lastReadTime time.Time
-	readTimeout  time.Duration
+	handler          messageHandler
+	logger           *zap.SugaredLogger
+	readWaitTime     time.Duration
+	maxEmptyReads    int
+	processedInBatch int
+	batchSize        int
 }
 
-// NewBatchProcessor creates a new batch processor with the given batch size
-func NewBatchProcessor(handler messageHandler, batchSize int, logger *zap.SugaredLogger) *BatchProcessor {
+// NewBatchProcessor creates a new batch processor
+func NewBatchProcessor(handler messageHandler, logger *zap.SugaredLogger) *BatchProcessor {
 	return &BatchProcessor{
-		handler:      handler,
-		batchSize:    batchSize,
-		logger:       logger,
-		currentBatch: make([][]byte, 0, batchSize),
-		targets:      make([]string, 0, batchSize),
-		lastReadTime: time.Now(),
-		readTimeout:  5 * time.Second,
+		handler:          handler,
+		logger:           logger,
+		readWaitTime:     500 * time.Millisecond,
+		maxEmptyReads:    5,
+		processedInBatch: 0,
+		batchSize:        10, // Default batch size
 	}
 }
 
-// AddToBatch adds a message to the current batch
-// Returns true if the batch is full and ready to be processed
-func (bp *BatchProcessor) AddToBatch(target string, msg []byte) bool {
-	bp.currentBatch = append(bp.currentBatch, msg)
-	bp.targets = append(bp.targets, target)
-	return len(bp.currentBatch) >= bp.batchSize
+// ProcessFile adds a file to the current batch
+// Returns true if the batch is full and ready for commit
+func (bp *BatchProcessor) ProcessFile(msg []byte) (bool, error) {
+	if msg == nil {
+		return false, nil
+	}
+
+	ctx := context.Background()
+
+	// Generate a target filename based on timestamp to ensure uniqueness
+	target := "output_" + time.Now().Format("20060102_150405.000") + ".dat"
+
+	bp.logger.Infow("Processing file", "target", target)
+
+	if err := bp.handler.Write(ctx, target, msg); err != nil {
+		bp.logger.Errorw("Error processing file", "target", target, "error", err)
+		bp.handler.Rollback()
+		return false, err
+	}
+
+	bp.processedInBatch++
+
+	// Return true if batch is full
+	return bp.processedInBatch >= bp.batchSize, nil
 }
 
-// ProcessBatch processes all messages in the current batch
-func (bp *BatchProcessor) ProcessBatch() error {
-	if len(bp.currentBatch) == 0 {
+// CommitBatch commits the current batch of processed files
+func (bp *BatchProcessor) CommitBatch() error {
+	if bp.processedInBatch == 0 {
 		return nil
 	}
 
-	bp.logger.Infof("Processing batch of %d files", len(bp.currentBatch))
-	ctx := context.Background()
+	bp.logger.Infof("Committing batch of %d files", bp.processedInBatch)
 
-	for i, msg := range bp.currentBatch {
-		target := bp.targets[i]
-		if err := bp.handler.Write(ctx, target, msg); err != nil {
-			bp.logger.Errorw("Error processing file in batch", "target", target, "error", err)
-			bp.handler.Rollback()
-			return err
-		}
-	}
-
-	// Commit the batch
 	if err := bp.handler.Commit(); err != nil {
 		bp.logger.Errorw("Error committing batch", "error", err)
 		bp.handler.Rollback()
 		return err
 	}
 
-	// Clear the batch after successful processing
-	bp.currentBatch = make([][]byte, 0, bp.batchSize)
-	bp.targets = make([]string, 0, bp.batchSize)
+	// Reset the counter
+	bp.processedInBatch = 0
 	return nil
 }
 
-// ProcessFiles reads and processes files one by one in batches
+// ProcessFiles reads and processes files in batches
 func (bp *BatchProcessor) ProcessFiles() error {
 	done := make(chan struct{})
-	timeoutSignal := make(chan struct{}, 1) // Signal channel for timeout notifications
-	sigChan := make(chan os.Signal, 1)      // Channel for OS signals
+	sigChan := make(chan os.Signal, 1) // Channel for OS signals
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	defer func() {
@@ -101,48 +104,19 @@ func (bp *BatchProcessor) ProcessFiles() error {
 		signal.Stop(sigChan) // Stop receiving signals
 	}()
 
-	// Start a goroutine to check for read timeout
-	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ticker.C:
-				// If it's been more than readTimeout since last read and we have pending items
-				if time.Since(bp.lastReadTime) > bp.readTimeout && len(bp.currentBatch) > 0 {
-					bp.logger.Infow("Timeout reached with pending items",
-						"timeout", bp.readTimeout,
-						"itemsInBatch", len(bp.currentBatch))
-
-					// Send timeout signal (non-blocking)
-					select {
-					case timeoutSignal <- struct{}{}:
-					default: // Don't block if channel is full
-					}
-				}
-			case <-done:
-				return
-			}
-		}
-	}()
+	// Keep track of consecutive empty reads
+	emptyReads := 0
 
 	for {
-		// Check for timeout signal or OS signal
+		// Check for OS signals
 		select {
-		case <-timeoutSignal:
-			bp.logger.Info("Processing batch due to timeout signal")
-			if err := bp.ProcessBatch(); err != nil {
-				bp.logger.Errorw("Error processing batch on timeout", "error", err)
-				return err
-			}
 		case sig := <-sigChan:
 			bp.logger.Infow("Received termination signal", "signal", sig)
-			// Process any remaining items in the batch
-			if len(bp.currentBatch) > 0 {
-				bp.logger.Info("Processing remaining items before shutdown")
-				if err := bp.ProcessBatch(); err != nil {
-					bp.logger.Errorw("Error processing batch on shutdown", "error", err)
+			// Commit any pending files before shutdown
+			if bp.processedInBatch > 0 {
+				bp.logger.Info("Committing remaining items before shutdown")
+				if err := bp.CommitBatch(); err != nil {
+					bp.logger.Errorw("Error committing batch on shutdown", "error", err)
 				}
 			}
 			return nil // Graceful exit
@@ -150,7 +124,7 @@ func (bp *BatchProcessor) ProcessFiles() error {
 			// Continue normal processing
 		}
 
-		// Check if we need to end due to no new files for a while
+		// Read a file
 		result, err := bp.handler.Read()
 		if err != nil {
 			bp.logger.Errorw("Error reading file", "error", err)
@@ -159,27 +133,47 @@ func (bp *BatchProcessor) ProcessFiles() error {
 			}
 		}
 
+		// Process the file if we have one
 		if result.Msg != nil {
-			// Reset counter and update last read time on successful read
-			bp.lastReadTime = time.Now()
+			emptyReads = 0 // Reset the empty reads counter
 
-			// Add to current batch with a placeholder target
-			if bp.AddToBatch("output", result.Msg) {
-			} else {
-				// No files found, wait a bit
-				time.Sleep(500 * time.Millisecond)
+			// Add file to batch, check if batch is full
+			batchFull, err := bp.ProcessFile(result.Msg)
+			if err != nil {
+				return err
 			}
 
-			// Check if we should end due to timeout
-			if time.Since(bp.lastReadTime) > bp.readTimeout && len(bp.currentBatch) > 0 {
-				bp.logger.Info("No new files for 5 seconds, ending batch")
-				if err := bp.ProcessBatch(); err != nil {
+			// Commit if batch is full
+			if batchFull {
+				bp.logger.Info("Batch is full, committing")
+				if err := bp.CommitBatch(); err != nil {
 					return err
 				}
+			}
+		} else {
+			// No files found, increment empty reads counter
+			emptyReads++
+			bp.logger.Debugw("No files found", "emptyReads", emptyReads)
+
+			// If we've had too many consecutive empty reads and we have files in the batch, commit the batch
+			if emptyReads >= bp.maxEmptyReads && bp.processedInBatch > 0 {
+				bp.logger.Info("Maximum empty reads reached with pending files, committing batch")
+				if err := bp.CommitBatch(); err != nil {
+					return err
+				}
+			}
+
+			// If we've had too many consecutive empty reads and no files in the batch, end processing
+			if emptyReads >= bp.maxEmptyReads && bp.processedInBatch == 0 {
+				bp.logger.Info("Maximum empty reads reached with no pending files, ending batch processing")
 				break
 			}
 		}
+
+		// Wait between reads to prevent CPU spinning
+		time.Sleep(bp.readWaitTime)
 	}
+
 	return nil
 }
 
@@ -187,17 +181,19 @@ func main() {
 	logger, _ := zap.NewDevelopment()
 	log := logger.Sugar()
 
-	fh := NewFileHandler(log)
+	// Create file handler implementation of messageHandler interface
+	handler := NewFileHandler(log)
+	defer handler.Close()
 
-	// Create a batch processor with batch size of 10
-	batchProcessor := NewBatchProcessor(fh, 10, log)
+	// Create a batch processor
+	batchProcessor := NewBatchProcessor(handler, log)
 
-	// Process files one by one but in batches
+	// Process files in batches
+	log.Info("Starting file processing")
 	err := batchProcessor.ProcessFiles()
 	if err != nil {
-		log.Errorw("Error processing files in batches", "error", err)
+		log.Errorw("Error processing files", "error", err)
 	}
 
-	// Cleanup
-	fh.Close()
+	log.Info("File processing complete")
 }
