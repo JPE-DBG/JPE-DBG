@@ -1,4 +1,7 @@
-package main
+package game
+
+const MapCols = 100
+const MapRows = 100
 
 type Tile struct {
 	Type string `json:"type"`

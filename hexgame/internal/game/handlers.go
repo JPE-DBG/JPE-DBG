@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"encoding/json"
@@ -22,7 +22,7 @@ type MoveRequest struct {
 	ToRow   int    `json:"toRow"`
 }
 
-func mapHandler(w http.ResponseWriter, r *http.Request) {
+func MapHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	cols := MapCols
 	rows := MapRows
@@ -47,7 +47,7 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("mapHandler: generated %dx%d map in %v", cols, rows, time.Since(start))
 }
 
-func gameHandler(w http.ResponseWriter, r *http.Request) {
+func GameHandler(w http.ResponseWriter, r *http.Request) {
 	regen := r.URL.Query().Get("regen")
 	cols := MapCols
 	rows := MapRows
@@ -72,7 +72,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(gameState)
 }
 
-func moveHandler(w http.ResponseWriter, r *http.Request) {
+func MoveHandler(w http.ResponseWriter, r *http.Request) {
 	if gameState == nil {
 		log.Println("moveHandler: gameState is nil")
 		w.WriteHeader(http.StatusBadRequest)
@@ -120,7 +120,7 @@ func moveHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(gameState)
 }
 
-func endTurnHandler(w http.ResponseWriter, r *http.Request) {
+func EndTurnHandler(w http.ResponseWriter, r *http.Request) {
 	if gameState == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -136,7 +136,7 @@ func endTurnHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(gameState)
 }
 
-func moveRangeHandler(w http.ResponseWriter, r *http.Request) {
+func MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 	type Req struct {
 		Col   int `json:"col"`
 		Row   int `json:"row"`
