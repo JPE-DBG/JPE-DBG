@@ -43,7 +43,7 @@ body {
 .right-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 5px;
 }
 .map-size-controls {
     display: flex;
@@ -57,6 +57,7 @@ body {
     justify-content: center;
     gap: 2px;
     min-width: 110px;
+    margin-right: 10px;
 }
 .map-size-row {
     display: flex;
@@ -108,7 +109,7 @@ body {
     background: #388e3c;
     color: #fff;
     border: none;
-    margin-left: 18px;
+    margin-left: 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     transition: background 0.2s, box-shadow 0.2s;
     cursor: pointer;
