@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type MapResponse struct {
@@ -22,6 +23,7 @@ type MoveRequest struct {
 }
 
 func mapHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	cols := MapCols
 	rows := MapRows
 	if c := r.URL.Query().Get("cols"); c != "" {
@@ -42,6 +44,7 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+	log.Printf("mapHandler: generated %dx%d map in %v", cols, rows, time.Since(start))
 }
 
 func gameHandler(w http.ResponseWriter, r *http.Request) {

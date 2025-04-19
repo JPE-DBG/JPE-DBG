@@ -37,10 +37,11 @@ let gameState = null;
 let mapCenteredOnce = false;
 
 async function initGame() {
-    await fetchGame();
+    resizeCanvas(true); // Set canvas size, but don't draw yet
+    await fetchGame(false); // Don't draw in fetchGame
     centerMapView();
     mapCenteredOnce = true;
-    drawGrid();
+    drawGrid(); // Only draw once, after everything is ready
 }
 
 // Fetch map from Go backend
@@ -61,13 +62,13 @@ async function fetchMap() {
 }
 
 // Fetch game state from Go backend
-async function fetchGame() {
+async function fetchGame(draw = true) {
     const res = await fetch('/api/game');
     gameState = await res.json();
     COLS = gameState.cols;
     ROWS = gameState.rows;
     mapData = { tiles: gameState.tiles };
-    drawGrid();
+    if (draw) drawGrid();
 }
 
 // --- UI: Bottom Bar Selection ---
@@ -244,11 +245,15 @@ function drawHexOutline(x, y, size, outlineColor, lineWidth = 4) {
 }
 
 function drawGrid() {
+    console.time('drawGrid'); // DEBUG: Start timing
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const hexSize = FIXED_HEX_SIZE * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = 20;
-    if (!gameState) return;
+    if (!gameState) {
+        console.timeEnd('drawGrid'); // DEBUG: End timing if nothing to draw
+        return;
+    }
     // Calculate visible bounds
     const minX = -offsetX / hexSize / 1.5 - 2;
     const maxX = (canvas.width - offsetX) / hexSize / 1.5 + 2;
@@ -263,15 +268,9 @@ function drawGrid() {
             if (col % 2 !== 0) y += hexHeight / 2;
             if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
             let tileType = gameState.tiles[col][row].type;
-            //let color = '#222';
             if (tileType === 'land') color = '#81c784';
             else if (tileType === 'water') color = '#1976d2';
             else if (tileType === 'void') color = '#111';
-
-            // Only the selected tile gets the yellow fill
-            // if (selectedTile && selectedTile.col === col && selectedTile.row === row) {
-            //     color = '#ffd54f';
-            // }
             drawHex(x, y, hexSize, color);
         }
     }
@@ -282,7 +281,6 @@ function drawGrid() {
         let x = hexSize * 1.5 * col + offsetX + margin;
         let y = hexHeight * row + offsetY + margin;
         if (col % 2 !== 0) y += hexHeight / 2;
-        //drawHexOutline(x, y, hexSize, '#ff9800', 4);
         drawHexOutline(x, y, hexSize, '#ffffff', 3);
     }
     // Pass 3: Draw units/buildings only on land
@@ -305,6 +303,7 @@ function drawGrid() {
             }
         }
     }
+    console.timeEnd('drawGrid'); // DEBUG: End timing
 }
 
 function drawHex(x, y, size, color) {
@@ -340,18 +339,17 @@ function drawBuilding(x, y, size) {
     ctx.stroke();
 }
 
-// Remove grid scaling and resize logic, keep canvas size fixed to window
-function resizeCanvas() {
+// Update resizeCanvas to accept a skipDraw argument
+function resizeCanvas(skipDraw = false) {
     const bar = document.getElementById('bottom-bar');
     const barRect = bar ? bar.getBoundingClientRect() : { height: 35, top: 0 };
-    // Set canvas height so it ends exactly at the top of the bottom bar
     canvas.width = window.innerWidth;
     canvas.height = bar ? barRect.top : (window.innerHeight - barRect.height);
     if (!mapCenteredOnce) {
         centerMapView();
         mapCenteredOnce = true;
     }
-    drawGrid();
+    if (!skipDraw && mapCenteredOnce) drawGrid(); // Only draw if not skipping and already centered
 }
 
 function centerMapView() {
@@ -368,8 +366,7 @@ function centerMapView() {
     offsetY = canvasCenterY - mapCenterY;
 }
 
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', () => resizeCanvas(false));
 
-// On load, call initGame instead of fetchGame
+// On load, call only initGame. Remove resizeCanvas() here to avoid double draw on startup.
 initGame();
-resizeCanvas();
