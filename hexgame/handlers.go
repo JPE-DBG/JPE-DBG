@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type MapResponse struct {
@@ -21,10 +22,22 @@ type MoveRequest struct {
 }
 
 func mapHandler(w http.ResponseWriter, r *http.Request) {
-	tiles := generateMapV3(MapCols, MapRows)
+	cols := MapCols
+	rows := MapRows
+	if c := r.URL.Query().Get("cols"); c != "" {
+		if v, err := strconv.Atoi(c); err == nil && v >= 30 && v <= 50000 {
+			cols = v
+		}
+	}
+	if rws := r.URL.Query().Get("rows"); rws != "" {
+		if v, err := strconv.Atoi(rws); err == nil && v >= 30 && v <= 50000 {
+			rows = v
+		}
+	}
+	tiles := generateMapV3(cols, rows)
 	resp := MapResponse{
-		Cols:  MapCols,
-		Rows:  MapRows,
+		Cols:  cols,
+		Rows:  rows,
 		Tiles: tiles,
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -33,8 +46,24 @@ func mapHandler(w http.ResponseWriter, r *http.Request) {
 
 func gameHandler(w http.ResponseWriter, r *http.Request) {
 	regen := r.URL.Query().Get("regen")
-	if regen == "1" || gameState == nil {
-		gameState = newGameState(MapCols, MapRows)
+	cols := MapCols
+	rows := MapRows
+	if regen == "1" {
+		// Parse cols/rows from query params if present
+		if c := r.URL.Query().Get("cols"); c != "" {
+			if v, err := strconv.Atoi(c); err == nil && v >= 30 && v <= 50000 {
+				cols = v
+			}
+		}
+		if rws := r.URL.Query().Get("rows"); rws != "" {
+			if v, err := strconv.Atoi(rws); err == nil && v >= 30 && v <= 50000 {
+				rows = v
+			}
+		}
+		gameState = newGameState(cols, rows)
+	} else if gameState == nil {
+		// Initialize gameState on first load with default size
+		gameState = newGameState(cols, rows)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(gameState)
