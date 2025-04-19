@@ -36,6 +36,36 @@ let mapData = null;
 let gameState = null;
 let mapCenteredOnce = false;
 
+// --- Draw scheduling ---
+let drawGridQueued = false;
+function scheduleDrawGrid() {
+    if (!drawGridQueued) {
+        drawGridQueued = true;
+        requestAnimationFrame(() => {
+            drawGridQueued = false;
+            drawGrid();
+        });
+    }
+}
+
+// --- FPS Counter ---
+let fps = 0;
+let lastFrameTime = performance.now();
+let frameCount = 0;
+let droppedFrames = 0;
+let lastFpsReport = performance.now();
+
+function renderFpsCounter() {
+    ctx.save();
+    ctx.font = '16px monospace';
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(10, 10, 120, 40);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`FPS: ${fps}`, 20, 30);
+    ctx.fillText(`Dropped: ${droppedFrames}`, 20, 50);
+    ctx.restore();
+}
+
 async function initGame() {
     resizeCanvas(true); // Set canvas size, but don't draw yet
     await fetchGame(false); // Don't draw in fetchGame
@@ -58,7 +88,7 @@ async function fetchMap() {
             mapState[col][row] = null;
         }
     }
-    drawGrid();
+    scheduleDrawGrid();
 }
 
 // Fetch game state from Go backend
@@ -68,7 +98,7 @@ async function fetchGame(draw = true) {
     COLS = gameState.cols;
     ROWS = gameState.rows;
     mapData = { tiles: gameState.tiles };
-    if (draw) drawGrid();
+    if (draw) scheduleDrawGrid();
 }
 
 // --- UI: Bottom Bar Selection ---
@@ -80,7 +110,7 @@ document.querySelectorAll('.icon-btn').forEach(btn => {
         console.log('Selected bar type:', selectedBarType); // DEBUG
         selectedTile = null;
         moveRange = [];
-        drawGrid();
+        scheduleDrawGrid();
     });
 });
 
@@ -89,7 +119,7 @@ document.getElementById('nextTurnBtn').addEventListener('click', async () => {
     await fetchGame();
     selectedTile = null;
     moveRange = [];
-    drawGrid();
+    scheduleDrawGrid();
 });
 
 document.getElementById('regenMapBtn').addEventListener('click', async () => {
@@ -99,7 +129,7 @@ document.getElementById('regenMapBtn').addEventListener('click', async () => {
     await fetchGame();
     selectedTile = null;
     moveRange = [];
-    drawGrid();
+    scheduleDrawGrid();
 });
 
 // --- Canvas Click: Place, Select, or Move ---
@@ -128,7 +158,7 @@ canvas.addEventListener('click', async (e) => {
         await fetchGame();
         selectedTile = {col, row};
         moveRange = [];
-        drawGrid();
+        scheduleDrawGrid();
     } else if (unit) {
         selectedTile = {col, row};
         // Only show move range if unit has not moved and is owned by current player
@@ -144,7 +174,7 @@ canvas.addEventListener('click', async (e) => {
         } else {
             moveRange = [];
         }
-        drawGrid();
+        scheduleDrawGrid();
     } else if (selectedTile && moveRange.length > 0 && !unit && !building) {
         const inRange = moveRange.some(t => t.col === col && t.row === row);
         if (inRange) {
@@ -156,12 +186,12 @@ canvas.addEventListener('click', async (e) => {
             await fetchGame();
             selectedTile = {col, row};
             moveRange = [];
-            drawGrid();
+            scheduleDrawGrid();
         }
     } else {
         selectedTile = null;
         moveRange = [];
-        drawGrid();
+        scheduleDrawGrid();
     }
 });
 
@@ -178,7 +208,7 @@ canvas.addEventListener('wheel', (e) => {
     const my = e.clientY - rect.top;
     offsetX = (offsetX - mx) * (zoom / prevZoom) + mx;
     offsetY = (offsetY - my) * (zoom / prevZoom) + my;
-    drawGrid();
+    scheduleDrawGrid();
 }, { passive: false });
 
 // --- Right Click and Drag Pan ---
@@ -193,7 +223,7 @@ window.addEventListener('mousemove', (e) => {
     if (isPanning) {
         offsetX = panStart.ox + (e.clientX - panStart.x);
         offsetY = panStart.oy + (e.clientY - panStart.y);
-        drawGrid();
+        scheduleDrawGrid();
     }
 });
 window.addEventListener('mouseup', (e) => {
@@ -245,13 +275,24 @@ function drawHexOutline(x, y, size, outlineColor, lineWidth = 4) {
 }
 
 function drawGrid() {
-    console.time('drawGrid'); // DEBUG: Start timing
+    // --- FPS & dropped frame logic ---
+    const now = performance.now();
+    frameCount++;
+    // Detect dropped frames (if > 25ms since last frame at 60Hz)
+    if (now - lastFrameTime > 25) droppedFrames++;
+    lastFrameTime = now;
+    if (now - lastFpsReport > 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastFpsReport = now;
+        // Optionally reset droppedFrames every second
+        // droppedFrames = 0;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const hexSize = FIXED_HEX_SIZE * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = 20;
     if (!gameState) {
-        console.timeEnd('drawGrid'); // DEBUG: End timing if nothing to draw
         return;
     }
     // Calculate visible bounds
@@ -303,7 +344,7 @@ function drawGrid() {
             }
         }
     }
-    console.timeEnd('drawGrid'); // DEBUG: End timing
+    renderFpsCounter();
 }
 
 function drawHex(x, y, size, color) {
@@ -349,7 +390,7 @@ function resizeCanvas(skipDraw = false) {
         centerMapView();
         mapCenteredOnce = true;
     }
-    if (!skipDraw && mapCenteredOnce) drawGrid(); // Only draw if not skipping and already centered
+    if (!skipDraw && mapCenteredOnce) scheduleDrawGrid(); // Only draw if not skipping and already centered
 }
 
 function centerMapView() {
