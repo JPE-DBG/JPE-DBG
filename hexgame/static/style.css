@@ -1,4 +1,5 @@
 body {
+    position: relative;
     font-family: Arial, sans-serif;
     background: #222;
     color: #eee;
@@ -8,11 +9,13 @@ body {
     height: 100vh;
 }
 #hexCanvas {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 35px;
     width: 100vw;
-    height: calc(100vh - 35px); /* leave space for toolbar */
+    height: auto;
     background: #333;
     display: block;
     border: none;
