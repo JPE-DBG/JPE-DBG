@@ -92,7 +92,9 @@ document.getElementById('nextTurnBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('regenMapBtn').addEventListener('click', async () => {
-    await fetch('/api/game?regen=1'); // force backend to regenerate map
+    const cols = parseInt(document.getElementById('mapCols').value, 10) || 100;
+    const rows = parseInt(document.getElementById('mapRows').value, 10) || 100;
+    await fetch(`/api/game?regen=1&cols=${cols}&rows=${rows}`); // pass new size to backend
     await fetchGame();
     selectedTile = null;
     moveRange = [];
@@ -280,7 +282,8 @@ function drawGrid() {
         let x = hexSize * 1.5 * col + offsetX + margin;
         let y = hexHeight * row + offsetY + margin;
         if (col % 2 !== 0) y += hexHeight / 2;
-        drawHexOutline(x, y, hexSize, '#ff9800', 4);
+        //drawHexOutline(x, y, hexSize, '#ff9800', 4);
+        drawHexOutline(x, y, hexSize, '#ffffff', 3);
     }
     // Pass 3: Draw units/buildings only on land
     for (let col = 0; col < COLS; col++) {

@@ -8,10 +8,20 @@
 <body>
     <canvas id="hexCanvas"></canvas>
     <div id="bottom-bar">
-        <button class="icon-btn" data-type="unit">Unit</button>
-        <button class="icon-btn" data-type="building">Building</button>
-        <button id="regenMapBtn">Regenerate Map</button>
-        <button id="nextTurnBtn">Next Turn</button>
+        <div class="center-btns">
+            <button class="icon-btn" data-type="unit">Unit</button>
+            <button class="icon-btn" data-type="building">Building</button>
+            <button id="nextTurnBtn">Next Turn</button>
+        </div>
+        <div class="right-controls">
+            <div class="map-size-controls">
+                <label for="mapCols" style="color:#eee;">Cols:</label>
+                <input id="mapCols" type="number" min="5" max="200" value="100" style="width:50px; height:20px; margin:0 5px;">
+                <label for="mapRows" style="color:#eee;">Rows:</label>
+                <input id="mapRows" type="number" min="5" max="200" value="100" style="width:50px; height:20px; margin:0 5px;">
+            </div>
+            <button id="regenMapBtn">Regenerate Map</button>
+        </div>
     </div>
     <script src="hexgrid.js"></script>
 </body>
