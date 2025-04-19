@@ -1,5 +1,5 @@
 import { setupInputHandlers } from './input.js';
-import { drawGrid, renderFpsCounter } from './rendering.js';
+import { drawGrid } from './rendering.js';
 import * as state from './state.js'; // Import all state
 
 const canvas = document.getElementById('hexCanvas');
@@ -18,10 +18,12 @@ function resizeCanvas(skipDraw = false) {
     // Ensure height calculation is correct, considering the bar's position
     canvas.height = bar ? barRect.top : (window.innerHeight - barRect.height);
 
-    if (!state.mapCenteredOnce) {
-        centerMapView();
-        state.setMapCenteredOnce(true);
-    }
+    // Remove centering logic from here - it will be called explicitly after fetch
+    // if (!state.mapCenteredOnce) {
+    //     centerMapView();
+    //     state.setMapCenteredOnce(true);
+    // }
+
     // Schedule a draw unless explicitly skipped (like during initial load)
     if (!skipDraw) scheduleDrawGrid();
 }
@@ -41,12 +43,15 @@ function centerMapView() {
 // -----------------------------------------
 
 async function initGame() {
-    resizeCanvas(true); // Call resize first (skip draw)
-    await state.fetchGame(false, scheduleDrawGrid); // Fetch game state
-    // centerMapView(); // Centering is now handled within resizeCanvas
-    // state.setMapCenteredOnce(true); // Also handled within resizeCanvas
-    scheduleDrawGrid(); // Schedule the first draw
-    // renderFpsCounter(ctx); // FPS counter is rendered within drawGrid
+    // Fetch game state first to get dimensions
+    await state.fetchGame(false, scheduleDrawGrid);
+    // Now resize the canvas (sets width/height)
+    resizeCanvas(true); // Skip draw, but sets canvas size
+    // Explicitly center the map now that we have dimensions
+    centerMapView();
+    state.setMapCenteredOnce(true);
+    // Schedule the first draw
+    scheduleDrawGrid();
 }
 
 setupInputHandlers(canvas, ctx, scheduleDrawGrid);
