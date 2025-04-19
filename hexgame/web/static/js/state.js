@@ -9,6 +9,7 @@ export let isPanning = false;
 export let panStart = {x: 0, y: 0, ox: 0, oy: 0};
 export let mapData = null, gameState = null, mapCenteredOnce = false;
 
+export function setSelectedBarType(type) { selectedBarType = type; }
 export function setSelectedTile(tile) { selectedTile = tile; }
 export function setMoveRange(range) { moveRange = range; }
 export function setZoom(z) { zoom = z; }

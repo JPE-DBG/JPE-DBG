@@ -44,7 +44,8 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            state.selectedBarType = btn.dataset.type;
+            // Use the setter function instead of direct assignment
+            state.setSelectedBarType(btn.dataset.type);
             state.setSelectedTile(null);
             state.setMoveRange([]);
             scheduleDrawGrid();
@@ -87,7 +88,8 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type, toCol: col, toRow: row })
             });
-            state.selectedBarType = null;
+            // Use the setter function to clear the selection
+            state.setSelectedBarType(null);
             document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
             await state.fetchGame(true, scheduleDrawGrid);
             state.setSelectedTile({col, row});
