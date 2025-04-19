@@ -12,7 +12,7 @@ body {
     top: 0;
     left: 0;
     width: 100vw;
-    height: calc(100vh - 70px); /* leave space for toolbar */
+    height: calc(100vh - 35px); /* leave space for toolbar */
     background: #333;
     display: block;
     border: none;

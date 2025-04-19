@@ -3,42 +3,7 @@ package main
 import (
 	"math"
 	"math/rand"
-	"time"
 )
-
-func generateMap(cols, rows int) [][]Tile {
-	seed := time.Now().UnixNano()
-	rng := rand.New(rand.NewSource(seed))
-	centerX := float64(cols) / 2
-	centerY := float64(rows) / 2
-	maxDist := math.Min(centerX, centerY) * 0.95
-	noiseScale := 0.13
-
-	tiles := make([][]Tile, cols)
-	for x := 0; x < cols; x++ {
-		tiles[x] = make([]Tile, rows)
-		for y := 0; y < rows; y++ {
-			dx := float64(x) - centerX
-			dy := float64(y) - centerY
-			dist := math.Sqrt(dx*dx + dy*dy)
-			if dist > maxDist {
-				tiles[x][y] = Tile{Type: "void"}
-				continue
-			}
-			val := 0.5 + 0.5*math.Sin(float64(x)*noiseScale+float64(y)*noiseScale+float64(seed%1000))
-			val += rng.Float64()*0.2 - 0.1
-			if val > 0.55 {
-				tiles[x][y] = Tile{Type: "land"}
-			} else if val > 0.45 {
-				tiles[x][y] = Tile{Type: "water"}
-			} else {
-				tiles[x][y] = Tile{Type: "void"}
-			}
-		}
-	}
-	ensureLandConnected(tiles, cols, rows)
-	return tiles
-}
 
 // generateMapV2 creates a single large, connected continent with natural edges and a minimum land ratio.
 func generateMapV2(cols, rows int) [][]Tile {
@@ -157,7 +122,7 @@ func generateMapV2(cols, rows int) [][]Tile {
 	return fallback
 }
 
-// generateMapV3 creates a connected continent, no void mask, and no random void holes.
+// generateMapV3 creates a connected continent, no  mask, and no random void holes.
 func generateMapV3(cols, rows int) [][]Tile {
 	const minLandRatio = 0.20
 	maxAttempts := 15
@@ -259,46 +224,6 @@ func generateMapV3(cols, rows int) [][]Tile {
 		}
 	}
 	return fallback
-}
-
-func ensureLandConnected(tiles [][]Tile, cols, rows int) {
-	visited := make([][]bool, cols)
-	for i := range visited {
-		visited[i] = make([]bool, rows)
-	}
-	var sx, sy int
-	found := false
-	for x := 0; x < cols && !found; x++ {
-		for y := 0; y < rows && !found; y++ {
-			if tiles[x][y].Type == "land" {
-				sx, sy = x, y
-				found = true
-			}
-		}
-	}
-	if !found {
-		return
-	}
-	queue := [][2]int{{sx, sy}}
-	visited[sx][sy] = true
-	for len(queue) > 0 {
-		cx, cy := queue[0][0], queue[0][1]
-		queue = queue[1:]
-		for _, n := range hexNeighbors(cx, cy, cols, rows) {
-			nx, ny := n[0], n[1]
-			if !visited[nx][ny] && tiles[nx][ny].Type == "land" {
-				visited[nx][ny] = true
-				queue = append(queue, [2]int{nx, ny})
-			}
-		}
-	}
-	for x := 0; x < cols; x++ {
-		for y := 0; y < rows; y++ {
-			if tiles[x][y].Type == "land" && !visited[x][y] {
-				tiles[x][y].Type = "water"
-			}
-		}
-	}
 }
 
 func hexNeighbors(x, y, cols, rows int) [][2]int {

@@ -41,6 +41,7 @@ async function fetchMap() {
     mapData = await res.json();
     COLS = mapData.cols;
     ROWS = mapData.rows;
+
     // Initialize mapState for units/buildings
     for (let col = 0; col < COLS; col++) {
         mapState[col] = [];
@@ -58,6 +59,7 @@ async function fetchGame() {
     COLS = gameState.cols;
     ROWS = gameState.rows;
     mapData = { tiles: gameState.tiles }; // Ensure mapData is set for getHexAt
+    centerMapView();
     drawGrid();
 }
 
@@ -215,6 +217,23 @@ function pointInHex(mx, my, cx, cy, size) {
 }
 
 // --- Draw only visible tiles ---
+function drawHexOutline(x, y, size, outlineColor, lineWidth = 4) {
+    ctx.save();
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 3 * i;
+        const px = x + size * Math.cos(angle);
+        const py = y + size * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = outlineColor;
+    ctx.stroke();
+    ctx.restore();
+}
+
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const hexSize = FIXED_HEX_SIZE * zoom;
@@ -226,6 +245,7 @@ function drawGrid() {
     const maxX = (canvas.width - offsetX) / hexSize / 1.5 + 2;
     const minY = -offsetY / hexHeight - 2;
     const maxY = (canvas.height - offsetY) / hexHeight + 2;
+    // Pass 1: Draw all tile bases
     for (let col = 0; col < COLS; col++) {
         if (col < minX || col > maxX) continue;
         for (let row = 0; row < ROWS; row++) {
@@ -234,18 +254,36 @@ function drawGrid() {
             if (col % 2 !== 0) y += hexHeight / 2;
             if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
             let tileType = gameState.tiles[col][row].type;
-            let color = '#222';
-            if (tileType === 'land') color = '#81c784'; // Use only green for land
+            //let color = '#222';
+            if (tileType === 'land') color = '#81c784';
             else if (tileType === 'water') color = '#1976d2';
             else if (tileType === 'void') color = '#111';
-            if (selectedTile && selectedTile.col === col && selectedTile.row === row) {
-                color = '#ffd54f';
-            }
-            if (moveRange.some(t => t.col === col && t.row === row)) {
-                color = 'rgba(255, 255, 255, 0.15)'; // transparent for move range
-            }
+
+            // Only the selected tile gets the yellow fill
+            // if (selectedTile && selectedTile.col === col && selectedTile.row === row) {
+            //     color = '#ffd54f';
+            // }
             drawHex(x, y, hexSize, color);
-            // Draw unit/building only on land
+        }
+    }
+    // Pass 2: Draw orange outline for move range (no fill, no fill color set)
+    for (let i = 0; i < moveRange.length; i++) {
+        const {col, row} = moveRange[i];
+        if (col < minX || col > maxX || row < minY || row > maxY) continue;
+        let x = hexSize * 1.5 * col + offsetX + margin;
+        let y = hexHeight * row + offsetY + margin;
+        if (col % 2 !== 0) y += hexHeight / 2;
+        drawHexOutline(x, y, hexSize, '#ff9800', 4);
+    }
+    // Pass 3: Draw units/buildings only on land
+    for (let col = 0; col < COLS; col++) {
+        if (col < minX || col > maxX) continue;
+        for (let row = 0; row < ROWS; row++) {
+            let x = hexSize * 1.5 * col + offsetX + margin;
+            let y = hexHeight * row + offsetY + margin;
+            if (col % 2 !== 0) y += hexHeight / 2;
+            if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
+            let tileType = gameState.tiles[col][row].type;
             if (tileType === 'land') {
                 const unit = gameState.units.find(u => u.col === col && u.row === row);
                 const building = gameState.buildings.find(b => b.col === col && b.row === row);
@@ -295,10 +333,26 @@ function drawBuilding(x, y, size) {
 // Remove grid scaling and resize logic, keep canvas size fixed to window
 function resizeCanvas() {
     const bar = document.getElementById('bottom-bar');
-    const barHeight = bar ? bar.offsetHeight : 35;
+    const barRect = bar ? bar.getBoundingClientRect() : { height: 35, top: 0 };
+    // Set canvas height so it ends exactly at the top of the bottom bar
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - barHeight;
+    canvas.height = bar ? barRect.top : (window.innerHeight - barRect.height);
+    centerMapView();
     drawGrid();
+}
+
+function centerMapView() {
+    const hexSize = FIXED_HEX_SIZE * zoom;
+    const hexHeight = Math.sqrt(3) * hexSize;
+    const margin = 20;
+    // Center of map in pixels
+    const mapCenterX = (COLS * 1.5 * hexSize) / 2 + margin;
+    const mapCenterY = (ROWS * hexHeight) / 2 + margin;
+    // Center of canvas in pixels
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
+    offsetX = canvasCenterX - mapCenterX;
+    offsetY = canvasCenterY - mapCenterY;
 }
 
 window.addEventListener('resize', resizeCanvas);
