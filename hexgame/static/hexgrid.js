@@ -34,6 +34,14 @@ const FIXED_HEX_WIDTH = 2 * FIXED_HEX_SIZE;
 
 let mapData = null;
 let gameState = null;
+let mapCenteredOnce = false;
+
+async function initGame() {
+    await fetchGame();
+    centerMapView();
+    mapCenteredOnce = true;
+    drawGrid();
+}
 
 // Fetch map from Go backend
 async function fetchMap() {
@@ -58,8 +66,7 @@ async function fetchGame() {
     gameState = await res.json();
     COLS = gameState.cols;
     ROWS = gameState.rows;
-    mapData = { tiles: gameState.tiles }; // Ensure mapData is set for getHexAt
-    centerMapView();
+    mapData = { tiles: gameState.tiles };
     drawGrid();
 }
 
@@ -337,7 +344,10 @@ function resizeCanvas() {
     // Set canvas height so it ends exactly at the top of the bottom bar
     canvas.width = window.innerWidth;
     canvas.height = bar ? barRect.top : (window.innerHeight - barRect.height);
-    centerMapView();
+    if (!mapCenteredOnce) {
+        centerMapView();
+        mapCenteredOnce = true;
+    }
     drawGrid();
 }
 
@@ -357,8 +367,6 @@ function centerMapView() {
 
 window.addEventListener('resize', resizeCanvas);
 
-// On load, fetch game state
-fetchGame();
-
-// Initial resize
+// On load, call initGame instead of fetchGame
+initGame();
 resizeCanvas();
