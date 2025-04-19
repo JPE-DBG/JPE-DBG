@@ -21,54 +21,85 @@ body {
     border: none;
 }
 #bottom-bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    height: 56px;
+    background: #222;
+    border-top: 2px solid #444;
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    background: #222;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-top: 2px solid #444;
     z-index: 10;
-    height: 35px;
+    padding: 0 16px;
 }
 .center-btns {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex: 1 1 auto;
     gap: 20px;
 }
 .right-controls {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    gap: 10px;
-    margin-right: 20px;
+    gap: 16px;
 }
 .map-size-controls {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    height: 35px;
-    gap: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
 }
-.map-size-controls label,
-.map-size-controls input {
-    font-size: 12px;
-    height: 16px;
-    line-height: 16px;
-    margin: 0;
-    padding: 0;
+.map-size-controls-vertical {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+.map-size-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+#mapCols, #mapRows {
+    width: 64px;
+    height: 36px;
+    font-size: 16px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: #222;
+    color: #eee;
+    padding: 0 8px;
+    transition: border 0.2s;
+}
+#mapCols:focus, #mapRows:focus {
+    border: 1.5px solid #81c784;
+    outline: none;
+}
+.map-size-row label {
+    font-size: 15px;
+    color: #bbb;
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 #regenMapBtn {
-    height: 28px;
-    margin-left: 10px;
-    font-size: 12px;
-    padding: 2px 10px;
+    height: 40px;
+    font-size: 16px;
+    padding: 0 20px;
+    border-radius: 6px;
+    background: #388e3c;
+    color: #fff;
+    border: none;
+    margin-left: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+#regenMapBtn:hover {
+    background: #43a047;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 .icon-btn {
     background: #444;
