@@ -1,4 +1,4 @@
-import { ROWS, COLS, gameState, moveRange, zoom, offsetX, offsetY } from './state.js';
+import { ROWS, COLS, gameState, moveRange, zoom, offsetX, offsetY, selectedTile } from './state.js';
 
 let fps = 0;
 let lastFrameTime = performance.now();
@@ -22,18 +22,34 @@ export function drawGrid(ctx, canvas) {
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = 20;
     if (!gameState) return;
-    const minX = -offsetX / hexSize / 1.5 - 2;
-    const maxX = (canvas.width - offsetX) / hexSize / 1.5 + 2;
-    const minY = -offsetY / hexHeight - 2;
-    const maxY = (canvas.height - offsetY) / hexHeight + 2;
-    for (let col = 0; col < COLS; col++) {
-        if (col < minX || col > maxX) continue;
-        for (let row = 0; row < ROWS; row++) {
+
+    // --- Optimization: Precompute lookup maps --- 
+    const unitMap = new Map(gameState.units.map(u => [`${u.col}_${u.row}`, u]));
+    const buildingMap = new Map(gameState.buildings.map(b => [`${b.col}_${b.row}`, b]));
+    // -------------------------------------------
+
+    // Rough culling based on indices (keep this as a first pass)
+    const minCol = Math.floor((-offsetX - margin - hexSize) / (hexSize * 1.5));
+    const maxCol = Math.ceil((canvas.width - offsetX - margin + hexSize) / (hexSize * 1.5));
+    const minRow = Math.floor((-offsetY - margin - hexHeight) / hexHeight);
+    const maxRow = Math.ceil((canvas.height - offsetY - margin + hexHeight) / hexHeight);
+
+    // Draw Tiles
+    for (let col = Math.max(0, minCol); col < Math.min(COLS, maxCol); col++) {
+        for (let row = Math.max(0, minRow); row < Math.min(ROWS, maxRow); row++) {
             let x = hexSize * 1.5 * col + offsetX + margin;
             let y = hexHeight * row + offsetY + margin;
             if (col % 2 !== 0) y += hexHeight / 2;
-            if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
-            let tileType = gameState.tiles[col][row].type;
+
+            // --- Optimization: More precise viewport culling (commented out for now, can add if needed) ---
+            // if (x + hexSize < 0 || x - hexSize > canvas.width || y + hexHeight < 0 || y - hexHeight > canvas.height) {
+            //     continue; // Skip drawing if hex is completely off-screen
+            // }
+            // -----------------------------------------------------------------------------------------
+
+            let tileType = gameState.tiles[col]?.[row]?.type; // Add safe navigation
+            if (!tileType) continue; // Skip if tile data is missing
+
             let color = '#222';
             if (tileType === 'land') color = '#81c784';
             else if (tileType === 'water') color = '#1976d2';
@@ -41,33 +57,63 @@ export function drawGrid(ctx, canvas) {
             drawHex(x, y, hexSize, color, ctx);
         }
     }
+
+    // Draw Move Range (after tiles, before units/buildings)
+    ctx.globalAlpha = 0.5; // Make move range semi-transparent
     for (let i = 0; i < moveRange.length; i++) {
         const {col, row} = moveRange[i];
-        if (col < minX || col > maxX || row < minY || row > maxY) continue;
+        // Apply similar culling as tiles
+        if (col < Math.max(0, minCol) || col >= Math.min(COLS, maxCol) || row < Math.max(0, minRow) || row >= Math.min(ROWS, maxRow)) continue;
+
         let x = hexSize * 1.5 * col + offsetX + margin;
         let y = hexHeight * row + offsetY + margin;
         if (col % 2 !== 0) y += hexHeight / 2;
+
+        // Optional: Add precise culling here too if needed
+        // if (x + hexSize < 0 || x - hexSize > canvas.width || y + hexHeight < 0 || y - hexHeight > canvas.height) continue;
+
         drawHexOutline(x, y, hexSize, '#ffffff', 3, ctx);
     }
-    for (let col = 0; col < COLS; col++) {
-        if (col < minX || col > maxX) continue;
-        for (let row = 0; row < ROWS; row++) {
+    ctx.globalAlpha = 1.0; // Reset alpha
+
+    // Draw Selection Outline (if a tile is selected)
+    if (selectedTile) {
+        const {col, row} = selectedTile;
+        if (col >= Math.max(0, minCol) && col < Math.min(COLS, maxCol) && row >= Math.max(0, minRow) && row < Math.min(ROWS, maxRow)) {
             let x = hexSize * 1.5 * col + offsetX + margin;
             let y = hexHeight * row + offsetY + margin;
             if (col % 2 !== 0) y += hexHeight / 2;
-            if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
-            let tileType = gameState.tiles[col][row].type;
-            if (tileType === 'land') {
-                const unit = gameState.units.find(u => u.col === col && u.row === row);
-                const building = gameState.buildings.find(b => b.col === col && b.row === row);
-                if (unit) {
-                    drawUnit(x, y, hexSize, unit.moved, unit.owner === gameState.currentPlayer, ctx);
-                } else if (building) {
-                    drawBuilding(x, y, hexSize, ctx);
-                }
+            // Optional: Add precise culling here too if needed
+            drawHexOutline(x, y, hexSize, '#ffff00', 4, ctx); // Yellow outline for selection
+        }
+    }
+
+    // Draw Units and Buildings (using the maps)
+    for (let col = Math.max(0, minCol); col < Math.min(COLS, maxCol); col++) {
+        for (let row = Math.max(0, minRow); row < Math.min(ROWS, maxRow); row++) {
+            let tileType = gameState.tiles[col]?.[row]?.type;
+            if (tileType !== 'land') continue; // Only draw units/buildings on land
+
+            let x = hexSize * 1.5 * col + offsetX + margin;
+            let y = hexHeight * row + offsetY + margin;
+            if (col % 2 !== 0) y += hexHeight / 2;
+
+            // Optional: Add precise culling here too if needed
+            // if (x + hexSize < 0 || x - hexSize > canvas.width || y + hexHeight < 0 || y - hexHeight > canvas.height) continue;
+
+            // --- Optimization: Use maps for lookup ---
+            const unit = unitMap.get(`${col}_${row}`);
+            const building = buildingMap.get(`${col}_${row}`);
+            // ----------------------------------------
+
+            if (unit) {
+                drawUnit(x, y, hexSize, unit.moved, unit.owner === gameState.currentPlayer, ctx);
+            } else if (building) {
+                drawBuilding(x, y, hexSize, ctx);
             }
         }
     }
+
     renderFpsCounter(ctx);
 }
 
