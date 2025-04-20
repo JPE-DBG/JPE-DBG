@@ -9,10 +9,10 @@ export let isPanning = false;
 export let panStart = {x: 0, y: 0, ox: 0, oy: 0};
 export let mapData = null, gameState = null, mapCenteredOnce = false;
 
-// --- Removed Offscreen Canvas State ---
-// export let offscreenMapCanvas = null;
-// export let offscreenMapCtx = null;
-// export let isOffscreenDirty = true;
+// --- Add Offscreen Canvas State ---
+export let offscreenMapCanvas = null;
+export let offscreenMapCtx = null;
+export let isOffscreenDirty = true; // Flag to trigger initial render/re-render
 // --------------------------------
 
 export function setSelectedBarType(type) { selectedBarType = type; }
@@ -26,8 +26,8 @@ export function setMapData(data) { mapData = data; }
 export function setGameState(state) { gameState = state; }
 export function setMapCenteredOnce(val) { mapCenteredOnce = val; }
 
-// --- Removed Setter for Offscreen Dirty Flag ---
-// export function setOffscreenDirty(dirty) { isOffscreenDirty = dirty; }
+// --- Add Setter for Offscreen Dirty Flag ---
+export function setOffscreenDirty(dirty) { isOffscreenDirty = dirty; }
 // -----------------------------------------
 
 export async function fetchGame(draw = true, scheduleDrawGrid) {
