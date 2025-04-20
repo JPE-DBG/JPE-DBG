@@ -107,7 +107,18 @@ export function drawHexOutline(x, y, size, outlineColor, lineWidth, ctx) {
 export function drawUnit(x, y, size, moved, isCurrentPlayer, ctx) {
     ctx.beginPath();
     ctx.arc(x, y, size/3, 0, 2*Math.PI);
-    ctx.fillStyle = moved ? '#bdbdbd' : (isCurrentPlayer ? '#e53935' : '#888');
+    
+    // logic for determining fillStyle
+    let unitColor;
+    if (moved) {
+        unitColor = '#bdbdbd'; // Grey if moved
+    } else if (isCurrentPlayer) {
+        unitColor = '#e53935'; // Red if current player's unit and hasn't moved
+    } else {
+        unitColor = '#888';    // Darker grey for other players' units that haven't moved
+    }
+    ctx.fillStyle = unitColor;
+    
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.stroke();

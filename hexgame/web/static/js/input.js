@@ -1,4 +1,3 @@
-import { drawGrid } from './rendering.js';
 import * as state from './state.js';
 
 export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
