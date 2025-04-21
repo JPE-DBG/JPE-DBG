@@ -70,9 +70,6 @@ export function createPerfTestUI() {
     document.getElementById('resetMetrics').addEventListener('click', resetMetricsClicked);
     document.getElementById('clearAllData').addEventListener('click', clearAllDataClicked);
     
-    // Add auto-tracking toggle
-    createAutoTrackingToggle();
-    
     // Show any existing comparison data
     showComparison();
     
@@ -126,46 +123,6 @@ function startStatusUpdateLoop() {
     
     // Start the loop
     updateStatus();
-}
-
-// Create auto-tracking toggle button
-function createAutoTrackingToggle() {
-    // Create toggle button for automatic performance tracking
-    const toggleBtn = document.createElement('button');
-    toggleBtn.id = 'autoTrackToggle';
-    toggleBtn.style.cssText = `
-        position: fixed;
-        bottom: 70px;
-        right: 10px;
-        padding: 8px 12px;
-        background-color: #FF9800;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        z-index: 1000;
-    `;
-    toggleBtn.textContent = 'Auto-Track: OFF';
-    
-    // Toggle auto-tracking when clicked
-    toggleBtn.addEventListener('click', () => {
-        const newState = !perfMeasurement.isAutoTrackingEnabled();
-        perfMeasurement.setAutoTracking(newState);
-        updateAutoTrackToggleUI();
-    });
-    
-    document.body.appendChild(toggleBtn);
-}
-
-// Update auto-tracking toggle UI
-export function updateAutoTrackToggleUI() {
-    const toggleBtn = document.getElementById('autoTrackToggle');
-    if (toggleBtn) {
-        const autoTrackingEnabled = perfMeasurement.isAutoTrackingEnabled();
-        toggleBtn.textContent = `Auto-Track: ${autoTrackingEnabled ? 'ON' : 'OFF'}`;
-        toggleBtn.style.backgroundColor = autoTrackingEnabled ? '#4CAF50' : '#FF9800';
-    }
 }
 
 // Start performance tracking session with auto-scrolling
@@ -297,7 +254,4 @@ function showComparison() {
 export function removePerfTestUI() {
     const ui = document.getElementById('perfTestUI');
     if (ui) ui.remove();
-    
-    const toggle = document.getElementById('autoTrackToggle');
-    if (toggle) toggle.remove();
 }

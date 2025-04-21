@@ -70,10 +70,6 @@ try {
     console.error("Error loading saved measurements:", e);
 }
 
-// Configuration
-let autoTrackingEnabled = false;
-let lastPanFrameTime = 0;
-
 // Calculate the median value of an array
 function calculateMedian(values) {
     if (values.length === 0) return 0;
@@ -413,28 +409,6 @@ export function getPerfMetrics() {
 // Check if auto-scroll is active
 export function isAutoScrollActive() {
     return isAutoScrolling;
-}
-
-// Get auto-tracking status
-export function isAutoTrackingEnabled() {
-    return autoTrackingEnabled;
-}
-
-// Set auto-tracking status
-export function setAutoTracking(enabled) {
-    autoTrackingEnabled = enabled;
-    return autoTrackingEnabled;
-}
-
-// Update last pan frame time for auto-tracking
-export function updatePanFrameTime() {
-    lastPanFrameTime = performance.now();
-    return lastPanFrameTime;
-}
-
-// Get last pan frame time
-export function getLastPanFrameTime() {
-    return lastPanFrameTime;
 }
 
 // Save baseline results
