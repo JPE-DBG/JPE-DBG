@@ -26,6 +26,13 @@ export async function fetchGame(draw = true, scheduleDrawGrid) {
     COLS = gameState.cols;
     ROWS = gameState.rows;
     mapData = { tiles: gameState.tiles };
+
+    // Update UI input fields with current map size
+    const colsInput = document.getElementById('mapCols');
+    const rowsInput = document.getElementById('mapRows');
+    if (colsInput) colsInput.value = COLS;
+    if (rowsInput) rowsInput.value = ROWS;
+
     if (draw && typeof scheduleDrawGrid === 'function') scheduleDrawGrid();
 }
 

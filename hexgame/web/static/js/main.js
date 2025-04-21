@@ -34,8 +34,8 @@ function centerMapView() {
     state.setOffset(canvasCenterX - mapCenterX, canvasCenterY - mapCenterY);
 }
 
-async function initGame() {
-    // Fetch game state first to get dimensions
+async function initGame() {    
+    // Fetch game state to get dimensions and set input fields
     await state.fetchGame(false, scheduleDrawGrid);
     
     // Now resize the canvas (sets width/height)

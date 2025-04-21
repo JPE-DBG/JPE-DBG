@@ -1,7 +1,15 @@
 package game
 
-const MapCols = 500
-const MapRows = 500
+var (
+	MapCols = 500
+	MapRows = 500
+)
+
+// SetInitialMapSize sets the initial map dimensions
+func SetInitialMapSize(cols, rows int) {
+	MapCols = cols
+	MapRows = rows
+}
 
 type Tile struct {
 	Type string `json:"type"`
