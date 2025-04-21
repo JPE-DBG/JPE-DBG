@@ -162,19 +162,23 @@ export function startAutoScroll(gameState, setOffset, setZoom, offsetX, offsetY,
     
     const verticalCenter = rows * hexHeight / 2;
     
-    // Calculate the initial position - left edge with vertical center
-    const initialX = canvas.width / 2;
+    // Calculate the initial position - start with map filling the screen
+    // Position the map so it starts with the left edge just a bit off-screen
+    // This ensures the map is initially fully visible, giving better statistics
+    const initialX = 0; // Start with left edge of map aligned with left edge of screen
     const initialY = canvas.height / 2 - verticalCenter;
     
-    // Set starting position - left edge with vertical center
+    // Set starting position - map visible from the start
     setOffset(initialX, initialY);
     
     // Calculate the scrolling distance
     autoScrollPosition = 0;
-    autoScrollMaxPosition = mapWidth + 100; // Add more margin to ensure we cover the full map
+    // Total distance to scroll = map width + canvas width (to ensure full exit from left side)
+    autoScrollMaxPosition = mapWidth + canvas.width;
     
     console.log("Starting auto-scroll test with:", {
         mapWidth: mapWidth + "px",
+        canvasWidth: canvas.width + "px",
         initialX,
         initialY,
         maxPosition: autoScrollMaxPosition
