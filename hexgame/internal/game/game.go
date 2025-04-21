@@ -1,7 +1,7 @@
 package game
 
-const MapCols = 100
-const MapRows = 100
+const MapCols = 500
+const MapRows = 500
 
 type Tile struct {
 	Type string `json:"type"`
