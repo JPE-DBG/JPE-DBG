@@ -31,13 +31,51 @@ export let scrollMetrics = {
     totalTiles: 0
 };
 
-// Test result storage
+// Test result storage - now loaded from localStorage if available
 let baselineResults = null;
 let optimizationResults = [];
+
+// Load saved measurements from localStorage on module init
+try {
+    const savedBaseline = localStorage.getItem('hexGameBaseline');
+    if (savedBaseline) {
+        baselineResults = JSON.parse(savedBaseline);
+        console.log("Loaded baseline from localStorage:", baselineResults);
+    }
+    
+    const savedOptimizations = localStorage.getItem('hexGameOptimizations');
+    if (savedOptimizations) {
+        optimizationResults = JSON.parse(savedOptimizations);
+        console.log("Loaded optimizations from localStorage:", optimizationResults);
+    }
+} catch (e) {
+    console.error("Error loading saved measurements:", e);
+}
 
 // Configuration
 let autoTrackingEnabled = false;
 let lastPanFrameTime = 0;
+
+// Validate if our measurement approach is consistent
+export function validateMeasurementSystem() {
+    // Perform a quick consistency check to ensure our timing is working
+    const testStart = performance.now();
+    // Do a microbenchmark
+    let sum = 0;
+    for (let i = 0; i < 10000; i++) {
+        sum += i;
+    }
+    const elapsed = performance.now() - testStart;
+    
+    console.log(`Measurement validation: calculation took ${elapsed.toFixed(3)}ms`);
+    console.log(`Current timing resolution: ${performance.timeOrigin}`);
+    
+    return {
+        elapsed,
+        valid: elapsed > 0,
+        sum
+    };
+}
 
 // Start tracking a scrolling/zooming session
 export function startPerfTracking() {
@@ -177,24 +215,48 @@ export function saveBaselineResults() {
         return false;
     }
     
-    baselineResults = { ...scrollMetrics };
+    baselineResults = { 
+        ...scrollMetrics,
+        timestamp: new Date().toISOString(),
+        name: "Baseline"
+    };
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('hexGameBaseline', JSON.stringify(baselineResults));
+        console.log("Saved baseline to localStorage");
+    } catch (e) {
+        console.error("Failed to save baseline to localStorage:", e);
+    }
     
     // Clear any existing optimization comparisons
     optimizationResults = [];
+    localStorage.removeItem('hexGameOptimizations');
     
     return true;
 }
 
 // Save optimization results
 export function saveOptimizationResults() {
-    if (scrollMetrics.totalFrames === 0 || !baselineResults) {
+    if (scrollMetrics.totalFrames === 0) {
         return false;
     }
     
-    optimizationResults.push({ 
+    const newOptimization = { 
         ...scrollMetrics, 
+        timestamp: new Date().toISOString(),
         name: `Optimization #${optimizationResults.length + 1}` 
-    });
+    };
+    
+    optimizationResults.push(newOptimization);
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('hexGameOptimizations', JSON.stringify(optimizationResults));
+        console.log("Saved optimization to localStorage");
+    } catch (e) {
+        console.error("Failed to save optimization to localStorage:", e);
+    }
     
     return true;
 }
@@ -222,8 +284,13 @@ Total Tiles Rendered: ${metrics.totalTiles}`;
 export function generateComparisonText() {
     if (!baselineResults) return null;
     
-    let comparisonText = '== BASELINE ==\n';
-    comparisonText += formatPerfResults(baselineResults) + '\n\n';
+    let comparisonText = `== ${baselineResults.name || "BASELINE"} ==\n`;
+    comparisonText += formatPerfResults(baselineResults) + '\n';
+    if (baselineResults.timestamp) {
+        comparisonText += `Recorded: ${new Date(baselineResults.timestamp).toLocaleString()}\n\n`;
+    } else {
+        comparisonText += '\n';
+    }
     
     // Add optimization results if any
     if (optimizationResults.length > 0) {
@@ -233,11 +300,29 @@ export function generateComparisonText() {
             
             // Calculate and display differences
             const frameTimeDiff = ((baselineResults.avgFrameTime - opt.avgFrameTime) / baselineResults.avgFrameTime * 100).toFixed(2);
-            comparisonText += `Frame Time Change: ${frameTimeDiff}%\n\n`;
+            comparisonText += `Frame Time Change: ${frameTimeDiff}%\n`;
+            
+            if (opt.timestamp) {
+                comparisonText += `Recorded: ${new Date(opt.timestamp).toLocaleString()}\n\n`;
+            } else {
+                comparisonText += '\n';
+            }
         });
     }
     
     return comparisonText;
+}
+
+// Clear all saved measurements
+export function clearAllMeasurements() {
+    baselineResults = null;
+    optimizationResults = [];
+    
+    // Clear from localStorage
+    localStorage.removeItem('hexGameBaseline');
+    localStorage.removeItem('hexGameOptimizations');
+    
+    return true;
 }
 
 // Render performance metrics overlay on canvas

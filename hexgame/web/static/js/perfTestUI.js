@@ -9,6 +9,10 @@ import * as perfMeasurement from './perfMeasurement.js';
 
 // Create and display performance testing UI
 export function createPerfTestUI() {
+    // Check if measurement system is working properly
+    const validationResult = perfMeasurement.validateMeasurementSystem();
+    console.log("Performance measurement validation:", validationResult);
+    
     // Create the main container
     const perfTestDiv = document.createElement('div');
     perfTestDiv.id = 'perfTestUI';
@@ -36,15 +40,16 @@ export function createPerfTestUI() {
             <button id="saveOptimization" style="padding: 5px 10px; background: #9C27B0; border: none; color: white; border-radius: 3px;">Save as Optimization</button>
         </div>
         <div style="margin-bottom: 10px;">
-            <button id="resetMetrics" style="padding: 5px 10px; background: #607D8B; border: none; color: white; border-radius: 3px; width: 100%;">Reset Metrics</button>
+            <button id="resetMetrics" style="margin-right: 5px; padding: 5px 10px; background: #607D8B; border: none; color: white; border-radius: 3px;">Reset Metrics</button>
+            <button id="clearAllData" style="padding: 5px 10px; background: #FF5722; border: none; color: white; border-radius: 3px;">Clear All Data</button>
         </div>
         <div style="margin-top: 15px;">
             <strong>Last Test Results:</strong>
             <pre id="perfResults" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;"></pre>
         </div>
-        <div id="comparisonResults" style="margin-top: 15px; display: none;">
+        <div id="comparisonResults" style="margin-top: 15px; display: block;">
             <strong>Comparison:</strong>
-            <pre id="comparisonData" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;"></pre>
+            <pre id="comparisonData" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;">No comparison data yet.</pre>
         </div>
     `;
     
@@ -56,9 +61,13 @@ export function createPerfTestUI() {
     document.getElementById('saveBaseline').addEventListener('click', saveBaselineResults);
     document.getElementById('saveOptimization').addEventListener('click', saveOptimizationResults);
     document.getElementById('resetMetrics').addEventListener('click', resetMetricsClicked);
+    document.getElementById('clearAllData').addEventListener('click', clearAllDataClicked);
     
     // Add auto-tracking toggle
     createAutoTrackingToggle();
+    
+    // Show any existing comparison data
+    showComparison();
 }
 
 // Create auto-tracking toggle button
@@ -105,7 +114,6 @@ export function updateAutoTrackToggleUI() {
 function startPerfTrackingSession() {
     perfMeasurement.startPerfTracking();
     document.getElementById('perfResults').textContent = 'Recording in progress...';
-    document.getElementById('comparisonResults').style.display = 'none';
 }
 
 // Stop performance tracking session and display results
@@ -117,9 +125,7 @@ function stopPerfTrackingSession() {
     document.getElementById('perfResults').textContent = results;
     
     // Show comparison if we have baseline data
-    if (perfMeasurement.getBaselineResults()) {
-        showComparison();
-    }
+    showComparison();
 }
 
 // Save current results as baseline
@@ -129,26 +135,29 @@ function saveBaselineResults() {
         return;
     }
     
-    alert('Baseline saved!');
+    alert('Baseline saved! It will be available even if you restart the game.');
     
     // Show comparison section
-    document.getElementById('comparisonResults').style.display = 'block';
-    document.getElementById('comparisonData').textContent = 'Baseline saved. Run an optimization test to compare.';
+    showComparison();
 }
 
 // Save current results as an optimization
 function saveOptimizationResults() {
-    if (!perfMeasurement.saveOptimizationResults()) {
-        if (perfMeasurement.scrollMetrics.totalFrames === 0) {
-            alert('No performance data available. Run a test first.');
-        } else {
-            alert('Please save a baseline result first before saving optimizations.');
+    if (perfMeasurement.scrollMetrics.totalFrames === 0) {
+        alert('No performance data available. Run a test first.');
+        return;
+    }
+    
+    if (!perfMeasurement.getBaselineResults()) {
+        if (confirm('No baseline has been set. Would you like to save this as the baseline instead?')) {
+            saveBaselineResults();
         }
         return;
     }
     
+    perfMeasurement.saveOptimizationResults();
     const optimizations = perfMeasurement.getOptimizationResults();
-    alert(`Optimization #${optimizations.length} saved!`);
+    alert(`Optimization #${optimizations.length} saved! It will be available even if you restart the game.`);
     
     // Update comparison
     showComparison();
@@ -160,8 +169,25 @@ function resetMetricsClicked() {
     document.getElementById('perfResults').textContent = 'Metrics reset.';
 }
 
+// Clear all saved data
+function clearAllDataClicked() {
+    if (confirm('Are you sure you want to clear all saved performance data?')) {
+        perfMeasurement.clearAllMeasurements();
+        document.getElementById('perfResults').textContent = 'All data cleared.';
+        document.getElementById('comparisonData').textContent = 'No comparison data available.';
+        alert('All performance data has been cleared.');
+    }
+}
+
 // Show comparison between baseline and optimizations
 function showComparison() {
+    const baselineResults = perfMeasurement.getBaselineResults();
+    
+    if (!baselineResults) {
+        document.getElementById('comparisonData').textContent = 'No baseline data available yet. Record performance and save as baseline.';
+        return;
+    }
+    
     const comparisonText = perfMeasurement.generateComparisonText();
     if (comparisonText) {
         document.getElementById('comparisonResults').style.display = 'block';
