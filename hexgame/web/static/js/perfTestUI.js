@@ -7,6 +7,9 @@
 
 import * as perfMeasurement from './perfMeasurement.js';
 
+// Store references to state-setting functions
+let stateSetters = null;
+
 // Create and display performance testing UI
 export function createPerfTestUI() {
     // Check if measurement system is working properly
@@ -25,14 +28,14 @@ export function createPerfTestUI() {
         padding: 10px;
         border-radius: 5px;
         z-index: 1000;
-        width: 300px;
+        width: 350px;
         font-family: sans-serif;
     `;
     
     perfTestDiv.innerHTML = `
         <h3 style="margin: 0 0 10px 0;">Performance Testing</h3>
         <div style="margin-bottom: 10px;">
-            <button id="startPerfTest" style="margin-right: 5px; padding: 5px 10px; background: #4CAF50; border: none; color: white; border-radius: 3px;">Start Recording</button>
+            <button id="startPerfTest" style="margin-right: 5px; padding: 5px 10px; background: #4CAF50; border: none; color: white; border-radius: 3px;">Start Auto Test</button>
             <button id="stopPerfTest" style="padding: 5px 10px; background: #F44336; border: none; color: white; border-radius: 3px;">Stop Recording</button>
         </div>
         <div style="margin-bottom: 10px;">
@@ -42,6 +45,10 @@ export function createPerfTestUI() {
         <div style="margin-bottom: 10px;">
             <button id="resetMetrics" style="margin-right: 5px; padding: 5px 10px; background: #607D8B; border: none; color: white; border-radius: 3px;">Reset Metrics</button>
             <button id="clearAllData" style="padding: 5px 10px; background: #FF5722; border: none; color: white; border-radius: 3px;">Clear All Data</button>
+        </div>
+        <div id="recordingStatus" style="margin-top: 10px; display: none; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+            <div class="status-text">Not recording</div>
+            <div class="progress-bar" style="height: 5px; margin-top: 5px; background: #333;"><div class="progress" style="width: 0%; height: 100%; background: #4CAF50;"></div></div>
         </div>
         <div style="margin-top: 15px;">
             <strong>Last Test Results:</strong>
@@ -68,6 +75,57 @@ export function createPerfTestUI() {
     
     // Show any existing comparison data
     showComparison();
+    
+    // Start update loop for recording status
+    startStatusUpdateLoop();
+}
+
+// Set state management functions needed for auto-scrolling
+export function setStateFunctions(stateData) {
+    stateSetters = stateData;
+    console.log("State functions registered for auto-testing:", 
+        Object.keys(stateData).filter(key => stateData[key] !== undefined));
+}
+
+// Update recording status in UI
+function startStatusUpdateLoop() {
+    const updateStatus = () => {
+        const metrics = perfMeasurement.getPerfMetrics();
+        const statusDiv = document.getElementById('recordingStatus');
+        
+        if (metrics.isRecording || metrics.isAutoScrolling) {
+            statusDiv.style.display = 'block';
+            const statusText = statusDiv.querySelector('.status-text');
+            const progress = statusDiv.querySelector('.progress');
+            
+            // Display auto-scroll progress if active
+            if (metrics.isAutoScrolling) {
+                const percent = (metrics.autoScrollPosition / metrics.autoScrollMaxPosition * 100);
+                statusText.textContent = `Auto-scrolling... ${percent.toFixed(1)}%`;
+                progress.style.width = `${percent}%`;
+                progress.style.background = '#2196F3'; // Blue
+            }
+            // Otherwise show stabilization/recording status
+            else if (metrics.inStabilization) {
+                const percent = (metrics.stabilizationFrames / 10) * 100;
+                statusText.textContent = `Stabilizing... (${metrics.stabilizationFrames}/10)`;
+                progress.style.width = `${percent}%`;
+                progress.style.background = '#FFA500'; // Orange
+            } else {
+                statusText.textContent = `Recording... (${metrics.scrollMetrics.totalFrames} frames)`;
+                progress.style.width = '100%';
+                progress.style.background = '#4CAF50'; // Green
+            }
+        } else {
+            statusDiv.style.display = 'none';
+        }
+        
+        // Continue the loop
+        requestAnimationFrame(updateStatus);
+    };
+    
+    // Start the loop
+    updateStatus();
 }
 
 // Create auto-tracking toggle button
@@ -110,19 +168,59 @@ export function updateAutoTrackToggleUI() {
     }
 }
 
-// Start performance tracking session
+// Start performance tracking session with auto-scrolling
 function startPerfTrackingSession() {
+    if (!stateSetters) {
+        alert('Cannot start auto-test: state functions not available');
+        console.error("Auto-test failed: state functions not available");
+        return;
+    }
+    
+    const { gameState, setOffset, setZoom, offsetX, offsetY, zoom, COLS, ROWS } = stateSetters;
+    
+    if (!gameState) {
+        alert('Cannot start auto-test: game state not available');
+        console.error("Auto-test failed: game state not available");
+        return;
+    }
+    
+    console.log("Starting performance tracking with auto-scroll...");
+    
+    // First, start the performance tracking
     perfMeasurement.startPerfTracking();
-    document.getElementById('perfResults').textContent = 'Recording in progress...';
+    
+    // Then start auto-scrolling
+    const result = perfMeasurement.startAutoScroll(
+        gameState, 
+        setOffset,
+        setZoom,
+        offsetX,
+        offsetY,
+        zoom,
+        COLS,
+        ROWS
+    );
+    
+    if (!result) {
+        console.error("Failed to start auto-scrolling test");
+        return;
+    }
+    
+    document.getElementById('perfResults').textContent = 'Auto-test in progress...';
+    document.getElementById('recordingStatus').style.display = 'block';
+    document.getElementById('startPerfTest').disabled = true;
 }
 
 // Stop performance tracking session and display results
 function stopPerfTrackingSession() {
+    // This will also stop auto-scrolling if active
     perfMeasurement.stopPerfTracking();
     
     // Format and display the results
     const results = perfMeasurement.formatPerfResults(perfMeasurement.scrollMetrics);
     document.getElementById('perfResults').textContent = results;
+    document.getElementById('recordingStatus').style.display = 'none';
+    document.getElementById('startPerfTest').disabled = false;
     
     // Show comparison if we have baseline data
     showComparison();

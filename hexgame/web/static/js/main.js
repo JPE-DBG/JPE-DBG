@@ -11,6 +11,9 @@ function scheduleDrawGrid() {
     requestAnimationFrame(() => drawGrid(ctx, canvas));
 }
 
+// Expose the draw function globally so performance testing can access it
+window.scheduleDrawGrid = scheduleDrawGrid;
+
 function resizeCanvas(skipDraw = false) {
     const bar = document.getElementById('bottom-bar');
     const barRect = bar ? bar.getBoundingClientRect() : { height: 56, top: window.innerHeight - 56 };
@@ -41,6 +44,18 @@ async function initGame() {
     // Explicitly center the map now that we have dimensions
     centerMapView();
     state.setMapCenteredOnce(true);
+    
+    // Provide state management functions to the performance testing module
+    perfTestUI.setStateFunctions({
+        gameState: state.gameState,
+        setOffset: state.setOffset,
+        setZoom: state.setZoom,
+        offsetX: state.offsetX,
+        offsetY: state.offsetY,
+        zoom: state.zoom,
+        COLS: state.COLS,
+        ROWS: state.ROWS,
+    });
     
     // Schedule the first draw
     scheduleDrawGrid();
