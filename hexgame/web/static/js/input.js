@@ -138,12 +138,11 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type, toCol: col, toRow: row })
             });
-            
+            // Update game state and clear selection
             state.setSelectedBarType(null);
             document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
-            debouncedGameUpdate();
-            state.setSelectedTile({col, row});
-            
+            await debouncedGameUpdate();
+            scheduleDrawGrid();
         } else if (unit) {
             // Handle unit selection
             state.setSelectedTile({col, row});

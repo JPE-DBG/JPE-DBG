@@ -173,7 +173,7 @@ function drawVisibleHexesInRegion(startX, startY, width, height) {
 function drawDynamicElements(ctx, canvas) {
     const hexSize = 30 * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
-    const margin = 20;
+    const margin = hexHeight; // Match the margin used in state.js
     
     // Draw move range
     if (moveRange.length > 0) {

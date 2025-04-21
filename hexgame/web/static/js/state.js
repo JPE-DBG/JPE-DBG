@@ -63,7 +63,7 @@ export function getHexPosition(col, row) {
     
     const hexSize = 30 * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
-    const margin = 20;
+    const margin = hexHeight; // Match the margin used in rendering.js
     let x = hexSize * 1.5 * col + offsetX + margin;
     let y = hexHeight * row + offsetY + margin;
     if (col % 2 !== 0) y += hexHeight / 2;
@@ -149,7 +149,7 @@ export async function fetchMap(scheduleDrawGrid) {
 export function getHexAt(mx, my) {
     const hexSize = 30 * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
-    const margin = 20;
+    const margin = hexHeight; // Match the margin used in rendering.js
     
     if (!mapData) return null;
     
