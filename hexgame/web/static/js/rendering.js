@@ -11,131 +11,236 @@ for (let i = 0; i < 6; i++) {
     });
 }
 
+// Add offscreen canvas for double buffering
+let offscreenCanvas = document.createElement('canvas');
+let offscreenCtx = offscreenCanvas.getContext('2d');
+let lastDrawnState = {
+    offsetX: 0,
+    offsetY: 0,
+    zoom: 1,
+    visibleTiles: new Set(), // Track visible tiles for optimization
+    lastDrawnTiles: new Map() // Cache of last drawn positions
+};
+
+// Resize offscreen canvas
+export function resizeOffscreenCanvas(width, height) {
+    offscreenCanvas.width = width;
+    offscreenCanvas.height = height;
+    // Clear cache when resizing
+    lastDrawnState.visibleTiles.clear();
+    lastDrawnState.lastDrawnTiles.clear();
+}
+
 export function drawGrid(ctx, canvas) {
     // Start performance monitoring
     perfMeasurement.monitorFrameStart();
     
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Ensure offscreen canvas matches main canvas size
+    if (offscreenCanvas.width !== canvas.width || offscreenCanvas.height !== canvas.height) {
+        resizeOffscreenCanvas(canvas.width, canvas.height);
+    }
+    
     const hexSize = 30 * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
-    const margin = 20;
+    const margin = hexHeight; // Increased margin for smoother scrolling
     
     if (!gameState) return;
+
+    // Calculate scroll delta
+    const deltaX = offsetX - lastDrawnState.offsetX;
+    const deltaY = offsetY - lastDrawnState.offsetY;
+    const zoomChanged = zoom !== lastDrawnState.zoom;
     
-    // More precise culling calculations
-    const minX = Math.max(0, Math.floor((-offsetX - margin) / (hexSize * 1.5)) - 1);
-    const maxX = Math.min(COLS - 1, Math.ceil((canvas.width - offsetX + margin) / (hexSize * 1.5)) + 1);
-    const minY = Math.max(0, Math.floor((-offsetY - margin - hexHeight/2) / hexHeight) - 1);
-    const maxY = Math.min(ROWS - 1, Math.ceil((canvas.height - offsetY + margin) / hexHeight) + 1);
-    
-    // Group tiles by type for batch rendering
-    const landTiles = [];
-    const waterTiles = [];
-    const voidTiles = [];
-    
-    // First pass: collect tiles by type
-    for (let col = minX; col <= maxX; col++) {
-        for (let row = minY; row <= maxY; row++) {
-            let x = hexSize * 1.5 * col + offsetX + margin;
-            let y = hexHeight * row + offsetY + margin;
-            if (col % 2 !== 0) y += hexHeight / 2;
-            
-            // Fast bounds check
-            if (x + hexSize < 0 || x - hexSize > canvas.width || 
-                y + hexSize < 0 || y - hexSize > canvas.height) continue;
-            
-            // Track tile for rendering
-            const tileType = gameState.tiles[col][row].type;
-            const pos = { x, y, col, row };
-            
-            if (tileType === 'land') landTiles.push(pos);
-            else if (tileType === 'water') waterTiles.push(pos);
-            else if (tileType === 'void') voidTiles.push(pos);
-            
-            // Track tile render for performance measurement
-            perfMeasurement.trackTileRender();
-        }
-    }
-    
-    // Second pass: batch render tiles by type
-    // Render void tiles
-    if (voidTiles.length > 0) {
-        ctx.fillStyle = '#111';
-        ctx.strokeStyle = '#222';
-        batchDrawHexes(ctx, voidTiles, hexSize);
-    }
-    
-    // Render water tiles
-    if (waterTiles.length > 0) {
-        ctx.fillStyle = '#1976d2';
-        ctx.strokeStyle = '#222';
-        batchDrawHexes(ctx, waterTiles, hexSize);
-    }
-    
-    // Render land tiles
-    if (landTiles.length > 0) {
-        ctx.fillStyle = '#81c784';
-        ctx.strokeStyle = '#222';
-        batchDrawHexes(ctx, landTiles, hexSize);
-    }
-    
-    // Draw move range with batch approach
-    if (moveRange.length > 0) {
-        ctx.save();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#ffffff';
+    if (!zoomChanged && Math.abs(deltaX) < canvas.width && Math.abs(deltaY) < canvas.height) {
+        // Shift existing content
+        offscreenCtx.save();
+        offscreenCtx.globalCompositeOperation = 'copy';
+        offscreenCtx.drawImage(offscreenCanvas, deltaX, deltaY);
+        offscreenCtx.restore();
         
-        const moveRangeTiles = [];
-        for (let i = 0; i < moveRange.length; i++) {
-            const {col, row} = moveRange[i];
-            if (col < minX || col > maxX || row < minY || row > maxY) continue;
-            
-            let x = hexSize * 1.5 * col + offsetX + margin;
-            let y = hexHeight * row + offsetY + margin;
-            if (col % 2 !== 0) y += hexHeight / 2;
-            
-            // Skip if offscreen
-            if (x + hexSize < 0 || x - hexSize > canvas.width || 
-                y + hexSize < 0 || y - hexSize > canvas.height) continue;
-            
-            moveRangeTiles.push({ x, y });
-        }
-        
-        batchDrawHexOutlines(ctx, moveRangeTiles, hexSize);
-        ctx.restore();
-    }
-    
-    // Draw units and buildings - We keep this approach as these are fewer and varied
-    for (let col = minX; col <= maxX; col++) {
-        for (let row = minY; row <= maxY; row++) {
-            let x = hexSize * 1.5 * col + offsetX + margin;
-            let y = hexHeight * row + offsetY + margin;
-            if (col % 2 !== 0) y += hexHeight / 2;
-            
-            // Skip if offscreen
-            if (x + hexSize < 0 || x - hexSize > canvas.width || 
-                y + hexSize < 0 || y - hexSize > canvas.height) continue;
-            
-            let tileType = gameState.tiles[col][row].type;
-            if (tileType === 'land') {
-                // Use indexOf instead of find for better performance
-                const unit = findUnitAt(col, row);
-                const building = findBuildingAt(col, row);
-                
-                if (unit) {
-                    drawUnit(x, y, hexSize, unit.moved, unit.owner === gameState.currentPlayer, ctx);
-                } else if (building) {
-                    drawBuilding(x, y, hexSize, ctx);
-                }
+        // Calculate regions that need redrawing
+        const regions = [];
+        if (deltaX !== 0) {
+            if (deltaX > 0) {
+                regions.push({x: 0, y: 0, width: deltaX, height: canvas.height}); // Left strip
+            } else {
+                regions.push({x: canvas.width + deltaX, y: 0, width: -deltaX, height: canvas.height}); // Right strip
             }
         }
+        if (deltaY !== 0) {
+            if (deltaY > 0) {
+                regions.push({x: 0, y: 0, width: canvas.width, height: deltaY}); // Top strip
+            } else {
+                regions.push({x: 0, y: canvas.height + deltaY, width: canvas.width, height: -deltaY}); // Bottom strip
+            }
+        }
+        
+        // Clear and redraw only the regions that need updating
+        regions.forEach(region => {
+            offscreenCtx.clearRect(region.x, region.y, region.width, region.height);
+            drawVisibleHexesInRegion(region.x, region.y, region.width, region.height);
+        });
+    } else {
+        // Complete redraw needed
+        offscreenCtx.clearRect(0, 0, canvas.width, canvas.height);
+        drawVisibleHexesInRegion(0, 0, canvas.width, canvas.height);
     }
+    
+    // Update last drawn state
+    lastDrawnState.offsetX = offsetX;
+    lastDrawnState.offsetY = offsetY;
+    lastDrawnState.zoom = zoom;
+    
+    // Copy to main canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(offscreenCanvas, 0, 0);
+    
+    // Draw dynamic elements (units, buildings, move range) directly on main canvas
+    drawDynamicElements(ctx, canvas);
     
     // End performance monitoring
     perfMeasurement.monitorFrameEnd();
     
     // Render performance overlay if needed
     perfMeasurement.renderPerfOverlay(ctx);
+}
+
+// Draw visible hexes in a specific region
+function drawVisibleHexesInRegion(startX, startY, width, height) {
+    const hexSize = 30 * zoom;
+    const hexHeight = Math.sqrt(3) * hexSize;
+    const margin = hexHeight;
+    
+    // More precise culling calculations for the region
+    const minX = Math.max(0, Math.floor((startX - offsetX - margin) / (hexSize * 1.5)));
+    const maxX = Math.min(COLS - 1, Math.ceil((startX + width - offsetX + margin) / (hexSize * 1.5)));
+    const minY = Math.max(0, Math.floor((startY - offsetY - margin) / hexHeight));
+    const maxY = Math.min(ROWS - 1, Math.ceil((startY + height - offsetY + margin) / hexHeight));
+    
+    // Group tiles by type for batch rendering
+    const tilesByType = {
+        land: [],
+        water: [],
+        void: []
+    };
+    
+    // Collect visible tiles
+    const newVisibleTiles = new Set();
+    
+    for (let col = minX; col <= maxX; col++) {
+        for (let row = minY; row <= maxY; row++) {
+            let x = hexSize * 1.5 * col + offsetX + margin;
+            let y = hexHeight * row + offsetY + margin;
+            if (col % 2 !== 0) y += hexHeight / 2;
+            
+            // Fast bounds check for the region
+            if (x + hexSize < startX || x - hexSize > startX + width || 
+                y + hexSize < startY || y - hexSize > startY + height) continue;
+            
+            // Track tile and prepare for rendering
+            const tileId = `${col},${row}`;
+            newVisibleTiles.add(tileId);
+            
+            const tileType = gameState.tiles[col][row].type;
+            tilesByType[tileType].push({ x, y });
+            
+            // Track tile render for performance measurement
+            perfMeasurement.trackTileRender();
+        }
+    }
+    
+    // Batch render tiles by type
+    const colors = {
+        void: ['#111', '#222'],
+        water: ['#1976d2', '#222'],
+        land: ['#81c784', '#222']
+    };
+    
+    Object.entries(tilesByType).forEach(([type, tiles]) => {
+        if (tiles.length > 0) {
+            const [fillColor, strokeColor] = colors[type];
+            offscreenCtx.fillStyle = fillColor;
+            offscreenCtx.strokeStyle = strokeColor;
+            batchDrawHexes(offscreenCtx, tiles, hexSize);
+        }
+    });
+    
+    // Update visible tiles tracking
+    lastDrawnState.visibleTiles = newVisibleTiles;
+}
+
+// Draw units, buildings and move range
+function drawDynamicElements(ctx, canvas) {
+    const hexSize = 30 * zoom;
+    const hexHeight = Math.sqrt(3) * hexSize;
+    const margin = 20;
+    
+    // Draw move range
+    if (moveRange.length > 0) {
+        ctx.save();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ffffff';
+        
+        const moveRangeTiles = [];
+        for (const {col, row} of moveRange) {
+            let x = hexSize * 1.5 * col + offsetX + margin;
+            let y = hexHeight * row + offsetY + margin;
+            if (col % 2 !== 0) y += hexHeight / 2;
+            
+            if (isHexVisible(x, y, hexSize, canvas)) {
+                moveRangeTiles.push({ x, y });
+            }
+        }
+        
+        batchDrawHexOutlines(ctx, moveRangeTiles, hexSize);
+        ctx.restore();
+    }
+    
+    // Draw units and buildings
+    if (gameState.units.length > 0 || gameState.buildings.length > 0) {
+        // Only process tiles that are potentially visible
+        const visibleCols = Math.ceil(canvas.width / (hexSize * 1.5)) + 2;
+        const visibleRows = Math.ceil(canvas.height / hexHeight) + 2;
+        const centerCol = Math.floor(-offsetX / (hexSize * 1.5));
+        const centerRow = Math.floor(-offsetY / hexHeight);
+        
+        const minCol = Math.max(0, centerCol - Math.floor(visibleCols / 2));
+        const maxCol = Math.min(COLS - 1, centerCol + Math.ceil(visibleCols / 2));
+        const minRow = Math.max(0, centerRow - Math.floor(visibleRows / 2));
+        const maxRow = Math.min(ROWS - 1, centerRow + Math.ceil(visibleRows / 2));
+        
+        // Draw units
+        for (const unit of gameState.units) {
+            if (unit.col >= minCol && unit.col <= maxCol && unit.row >= minRow && unit.row <= maxRow) {
+                let x = hexSize * 1.5 * unit.col + offsetX + margin;
+                let y = hexHeight * unit.row + offsetY + margin;
+                if (unit.col % 2 !== 0) y += hexHeight / 2;
+                
+                if (isHexVisible(x, y, hexSize, canvas)) {
+                    drawUnit(x, y, hexSize, unit.moved, unit.owner === gameState.currentPlayer, ctx);
+                }
+            }
+        }
+        
+        // Draw buildings
+        for (const building of gameState.buildings) {
+            if (building.col >= minCol && building.col <= maxCol && building.row >= minRow && building.row <= maxRow) {
+                let x = hexSize * 1.5 * building.col + offsetX + margin;
+                let y = hexHeight * building.row + offsetY + margin;
+                if (building.col % 2 !== 0) y += hexHeight / 2;
+                
+                if (isHexVisible(x, y, hexSize, canvas)) {
+                    drawBuilding(x, y, hexSize, ctx);
+                }
+            }
+        }
+    }
+}
+
+// Helper to check if a hex is visible on screen
+function isHexVisible(x, y, size, canvas) {
+    return x + size >= 0 && x - size <= canvas.width && 
+           y + size >= 0 && y - size <= canvas.height;
 }
 
 // Utility functions for faster entity lookup
