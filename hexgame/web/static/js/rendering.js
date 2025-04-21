@@ -1,46 +1,49 @@
 import { ROWS, COLS, gameState, moveRange, zoom, offsetX, offsetY } from './state.js';
-
-let fps = 0;
-let lastFrameTime = performance.now();
-let frameCount = 0;
-let droppedFrames = 0;
-let lastFpsReport = performance.now();
+import * as perfMeasurement from './perfMeasurement.js';
 
 export function drawGrid(ctx, canvas) {
-    // --- FPS & dropped frame logic ---
-    const now = performance.now();
-    frameCount++;
-    if (now - lastFrameTime > 25) droppedFrames++;
-    lastFrameTime = now;
-    if (now - lastFpsReport > 1000) {
-        fps = frameCount;
-        frameCount = 0;
-        lastFpsReport = now;
-    }
+    // Start performance monitoring
+    perfMeasurement.monitorFrameStart();
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const hexSize = 30 * zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = 20;
+    
     if (!gameState) return;
-    const minX = -offsetX / hexSize / 1.5 - 2;
-    const maxX = (canvas.width - offsetX) / hexSize / 1.5 + 2;
-    const minY = -offsetY / hexHeight - 2;
-    const maxY = (canvas.height - offsetY) / hexHeight + 2;
+    
+    const minX = Math.floor(-offsetX / hexSize / 1.5) - 2;
+    const maxX = Math.ceil((canvas.width - offsetX) / hexSize / 1.5) + 2;
+    const minY = Math.floor(-offsetY / hexHeight) - 2;
+    const maxY = Math.ceil((canvas.height - offsetY) / hexHeight) + 2;
+    
+    // Draw map tiles
     for (let col = 0; col < COLS; col++) {
         if (col < minX || col > maxX) continue;
         for (let row = 0; row < ROWS; row++) {
+            if (row < minY || row > maxY) continue;
+            
             let x = hexSize * 1.5 * col + offsetX + margin;
             let y = hexHeight * row + offsetY + margin;
             if (col % 2 !== 0) y += hexHeight / 2;
+            
+            // Skip if offscreen
             if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
+            
             let tileType = gameState.tiles[col][row].type;
             let color = '#222';
             if (tileType === 'land') color = '#81c784';
             else if (tileType === 'water') color = '#1976d2';
             else if (tileType === 'void') color = '#111';
+            
             drawHex(x, y, hexSize, color, ctx);
+            
+            // Track tile render for performance measurement
+            perfMeasurement.trackTileRender();
         }
     }
+    
+    // Draw move range
     for (let i = 0; i < moveRange.length; i++) {
         const {col, row} = moveRange[i];
         if (col < minX || col > maxX || row < minY || row > maxY) continue;
@@ -49,13 +52,20 @@ export function drawGrid(ctx, canvas) {
         if (col % 2 !== 0) y += hexHeight / 2;
         drawHexOutline(x, y, hexSize, '#ffffff', 3, ctx);
     }
+    
+    // Draw units and buildings
     for (let col = 0; col < COLS; col++) {
         if (col < minX || col > maxX) continue;
         for (let row = 0; row < ROWS; row++) {
+            if (row < minY || row > maxY) continue;
+            
             let x = hexSize * 1.5 * col + offsetX + margin;
             let y = hexHeight * row + offsetY + margin;
             if (col % 2 !== 0) y += hexHeight / 2;
+            
+            // Skip if offscreen
             if (y + hexSize < 0 || y - hexSize > canvas.height) continue;
+            
             let tileType = gameState.tiles[col][row].type;
             if (tileType === 'land') {
                 const unit = gameState.units.find(u => u.col === col && u.row === row);
@@ -68,7 +78,12 @@ export function drawGrid(ctx, canvas) {
             }
         }
     }
-    renderFpsCounter(ctx);
+    
+    // End performance monitoring
+    perfMeasurement.monitorFrameEnd();
+    
+    // Render performance overlay if needed
+    perfMeasurement.renderPerfOverlay(ctx);
 }
 
 export function drawHex(x, y, size, color, ctx) {
@@ -131,15 +146,4 @@ export function drawBuilding(x, y, size, ctx) {
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.stroke();
-}
-
-export function renderFpsCounter(ctx) {
-    ctx.save();
-    ctx.font = '16px monospace';
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(10, 10, 120, 40);
-    ctx.fillStyle = '#fff';
-    ctx.fillText(`FPS: ${fps}`, 20, 30);
-    ctx.fillText(`Dropped: ${droppedFrames}`, 20, 50);
-    ctx.restore();
 }

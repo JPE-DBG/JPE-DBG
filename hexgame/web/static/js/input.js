@@ -1,9 +1,17 @@
 import * as state from './state.js';
+import * as perfMeasurement from './perfMeasurement.js';
 
 export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
     // Mouse wheel zoom
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
+        
+        // Auto-start performance tracking on zoom if enabled
+        if (perfMeasurement.isAutoTrackingEnabled() && !state.isPanning) {
+            perfMeasurement.startPerfTracking();
+            perfMeasurement.updatePanFrameTime();
+        }
+        
         const prevZoom = state.zoom;
         let newZoom = state.zoom;
         if (e.deltaY < 0) newZoom *= 1.1;
@@ -15,6 +23,16 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         const my = e.clientY - rect.top;
         state.setOffset((state.offsetX - mx) * (newZoom / prevZoom) + mx, (state.offsetY - my) * (newZoom / prevZoom) + my);
         scheduleDrawGrid();
+        
+        // Set a timeout to stop tracking after zoom stops
+        if (perfMeasurement.isAutoTrackingEnabled()) {
+            setTimeout(() => {
+                // If no more zoom events happened, stop tracking
+                if (performance.now() - perfMeasurement.getLastPanFrameTime() > 300) {
+                    perfMeasurement.stopPerfTracking();
+                }
+            }, 350);
+        }
     }, { passive: false });
 
     // Mouse drag pan
@@ -22,20 +40,42 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         if (e.button === 2) {
             state.setPanning(true);
             state.setPanStart({x: e.clientX, y: e.clientY, ox: state.offsetX, oy: state.offsetY});
+            
+            // Auto-start performance tracking
+            if (perfMeasurement.isAutoTrackingEnabled()) {
+                perfMeasurement.startPerfTracking();
+                perfMeasurement.updatePanFrameTime();
+            }
+            
             e.preventDefault();
         }
     });
+    
     window.addEventListener('mousemove', (e) => {
         if (state.isPanning) {
+            // Update timestamp for last pan action
+            if (perfMeasurement.isAutoTrackingEnabled()) {
+                perfMeasurement.updatePanFrameTime();
+            }
+            
             state.setOffset(state.panStart.ox + (e.clientX - state.panStart.x), state.panStart.oy + (e.clientY - state.panStart.y));
             scheduleDrawGrid();
         }
     });
+    
     window.addEventListener('mouseup', (e) => {
         if (e.button === 2) {
             state.setPanning(false);
+            
+            // Stop tracking after a short delay
+            if (perfMeasurement.isAutoTrackingEnabled()) {
+                setTimeout(() => {
+                    perfMeasurement.stopPerfTracking();
+                }, 200);
+            }
         }
     });
+    
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
     // UI: Bottom Bar Selection
