@@ -16,7 +16,7 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         let newZoom = state.zoom;
         if (e.deltaY < 0) newZoom *= 1.1;
         else newZoom /= 1.1;
-        newZoom = Math.max(0.1, Math.min(2.5, newZoom));
+        newZoom = Math.max(0.25, Math.min(2.5, newZoom));
         state.setZoom(newZoom);
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
