@@ -198,18 +198,36 @@ function drawDynamicElements(ctx, canvas) {
     
     // Draw units and buildings
     if (gameState.units.length > 0 || gameState.buildings.length > 0) {
-        // Only process tiles that are potentially visible
-        const visibleCols = Math.ceil(canvas.width / (hexSize * 1.5)) + 2;
-        const visibleRows = Math.ceil(canvas.height / hexHeight) + 2;
-        const centerCol = Math.floor(-offsetX / (hexSize * 1.5));
-        const centerRow = Math.floor(-offsetY / hexHeight);
+        // Calculate visible area with correct margins
+        const visibleCols = Math.ceil(canvas.width / (hexSize * 1.5)) + 4;
+        const visibleRows = Math.ceil(canvas.height / hexHeight) + 4;
+
+        // Calculate bounds using the same logic as drawVisibleHexesInRegion
+        const minCol = Math.max(0, Math.floor((-offsetX - margin) / (hexSize * 1.5)));
+        const maxCol = Math.min(COLS - 1, Math.ceil((canvas.width - offsetX + margin) / (hexSize * 1.5)));
+        const minRow = Math.max(0, Math.floor((-offsetY - margin) / hexHeight));
+        const maxRow = Math.min(ROWS - 1, Math.ceil((canvas.height - offsetY + margin) / hexHeight));
+
+        // Debug: Draw culling viewport rectangle
+        // ctx.save();
+        // ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        // ctx.lineWidth = 2;
+        // ctx.beginPath();
+        // Convert grid coordinates to screen coordinates
+        // const viewportLeft = hexSize * 1.5 * minCol + offsetX + margin;
+        // const viewportTop = hexHeight * minRow + offsetY + margin;
+        // const viewportWidth = hexSize * 1.5 * (maxCol - minCol + 1);
+        // const viewportHeight = hexHeight * (maxRow - minRow + 1);
+        // ctx.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight);
+        // ctx.stroke();
+        // Add debug text
+        // ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+        // ctx.font = '12px monospace';
+        // ctx.fillText(`Viewport: cols ${minCol}-${maxCol}, rows ${minRow}-${maxRow}`, 10, canvas.height - 40);
+        // ctx.fillText(`Center: col ${minCol + Math.floor((maxCol - minCol) / 2)}, row ${minRow + Math.floor((maxRow - minRow) / 2)}`, 10, canvas.height - 20);
+        // ctx.restore();
         
-        const minCol = Math.max(0, centerCol - Math.floor(visibleCols / 2));
-        const maxCol = Math.min(COLS - 1, centerCol + Math.ceil(visibleCols / 2));
-        const minRow = Math.max(0, centerRow - Math.floor(visibleRows / 2));
-        const maxRow = Math.min(ROWS - 1, centerRow + Math.ceil(visibleRows / 2));
-        
-        // Draw units
+        // Draw units with same bounds checking
         for (const unit of gameState.units) {
             if (unit.col >= minCol && unit.col <= maxCol && unit.row >= minRow && unit.row <= maxRow) {
                 let x = hexSize * 1.5 * unit.col + offsetX + margin;
@@ -222,7 +240,7 @@ function drawDynamicElements(ctx, canvas) {
             }
         }
         
-        // Draw buildings
+        // Draw buildings with same bounds checking
         for (const building of gameState.buildings) {
             if (building.col >= minCol && building.col <= maxCol && building.row >= minRow && building.row <= maxRow) {
                 let x = hexSize * 1.5 * building.col + offsetX + margin;
@@ -239,8 +257,10 @@ function drawDynamicElements(ctx, canvas) {
 
 // Helper to check if a hex is visible on screen
 function isHexVisible(x, y, size, canvas) {
-    return x + size >= 0 && x - size <= canvas.width && 
-           y + size >= 0 && y - size <= canvas.height;
+    // Use 1.5x size to account for the full hex width and height
+    const fullSize = size * 1.5;
+    return x + fullSize >= 0 && x - fullSize <= canvas.width && 
+           y + fullSize >= 0 && y - fullSize <= canvas.height;
 }
 
 // Utility functions for faster entity lookup
