@@ -1,4 +1,5 @@
-import { ROWS, COLS, gameState, moveRange, zoom, offsetX, offsetY } from './state.js';
+// Import state as a module instead of importing specific variables
+import * as state from './state.js';
 import * as perfMeasurement from './perfMeasurement.js';
 
 // Pre-computed hex vertices for better performance
@@ -11,9 +12,9 @@ for (let i = 0; i < 6; i++) {
     });
 }
 
-// Add offscreen canvas for double buffering
-let offscreenCanvas = document.createElement('canvas');
-let offscreenCtx = offscreenCanvas.getContext('2d');
+// Make the offscreen canvas available globally for debugging/clearing
+window.offscreenCanvas = document.createElement('canvas');
+let offscreenCtx = window.offscreenCanvas.getContext('2d');
 let lastDrawnState = {
     offsetX: 0,
     offsetY: 0,
@@ -24,8 +25,8 @@ let lastDrawnState = {
 
 // Resize offscreen canvas
 export function resizeOffscreenCanvas(width, height) {
-    offscreenCanvas.width = width;
-    offscreenCanvas.height = height;
+    window.offscreenCanvas.width = width;
+    window.offscreenCanvas.height = height;
     // Clear cache when resizing
     lastDrawnState.visibleTiles.clear();
     lastDrawnState.lastDrawnTiles.clear();
@@ -36,26 +37,26 @@ export function drawGrid(ctx, canvas) {
     perfMeasurement.monitorFrameStart();
     
     // Ensure offscreen canvas matches main canvas size
-    if (offscreenCanvas.width !== canvas.width || offscreenCanvas.height !== canvas.height) {
+    if (window.offscreenCanvas.width !== canvas.width || window.offscreenCanvas.height !== canvas.height) {
         resizeOffscreenCanvas(canvas.width, canvas.height);
     }
     
-    const hexSize = 30 * zoom;
+    const hexSize = 30 * state.zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = hexHeight; // Increased margin for smoother scrolling
     
-    if (!gameState) return;
+    if (!state.gameState) return;
 
     // Calculate scroll delta
-    const deltaX = offsetX - lastDrawnState.offsetX;
-    const deltaY = offsetY - lastDrawnState.offsetY;
-    const zoomChanged = zoom !== lastDrawnState.zoom;
+    const deltaX = state.offsetX - lastDrawnState.offsetX;
+    const deltaY = state.offsetY - lastDrawnState.offsetY;
+    const zoomChanged = state.zoom !== lastDrawnState.zoom;
     
     if (!zoomChanged && Math.abs(deltaX) < canvas.width && Math.abs(deltaY) < canvas.height) {
         // Shift existing content
         offscreenCtx.save();
         offscreenCtx.globalCompositeOperation = 'copy';
-        offscreenCtx.drawImage(offscreenCanvas, deltaX, deltaY);
+        offscreenCtx.drawImage(window.offscreenCanvas, deltaX, deltaY);
         offscreenCtx.restore();
         
         // Calculate regions that need redrawing
@@ -87,13 +88,13 @@ export function drawGrid(ctx, canvas) {
     }
     
     // Update last drawn state
-    lastDrawnState.offsetX = offsetX;
-    lastDrawnState.offsetY = offsetY;
-    lastDrawnState.zoom = zoom;
+    lastDrawnState.offsetX = state.offsetX;
+    lastDrawnState.offsetY = state.offsetY;
+    lastDrawnState.zoom = state.zoom;
     
     // Copy to main canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(offscreenCanvas, 0, 0);
+    ctx.drawImage(window.offscreenCanvas, 0, 0);
     
     // Draw dynamic elements (units, buildings, move range) directly on main canvas
     drawDynamicElements(ctx, canvas);
@@ -107,15 +108,15 @@ export function drawGrid(ctx, canvas) {
 
 // Draw visible hexes in a specific region
 function drawVisibleHexesInRegion(startX, startY, width, height) {
-    const hexSize = 30 * zoom;
+    const hexSize = 30 * state.zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = hexHeight;
     
     // More precise culling calculations for the region
-    const minX = Math.max(0, Math.floor((startX - offsetX - margin) / (hexSize * 1.5)));
-    const maxX = Math.min(COLS - 1, Math.ceil((startX + width - offsetX + margin) / (hexSize * 1.5)));
-    const minY = Math.max(0, Math.floor((startY - offsetY - margin) / hexHeight));
-    const maxY = Math.min(ROWS - 1, Math.ceil((startY + height - offsetY + margin) / hexHeight));
+    const minX = Math.max(0, Math.floor((startX - state.offsetX - margin) / (hexSize * 1.5)));
+    const maxX = Math.min(state.COLS - 1, Math.ceil((startX + width - state.offsetX + margin) / (hexSize * 1.5)));
+    const minY = Math.max(0, Math.floor((startY - state.offsetY - margin) / hexHeight));
+    const maxY = Math.min(state.ROWS - 1, Math.ceil((startY + height - state.offsetY + margin) / hexHeight));
     
     // Group tiles by type for batch rendering
     const tilesByType = {
@@ -129,8 +130,8 @@ function drawVisibleHexesInRegion(startX, startY, width, height) {
     
     for (let col = minX; col <= maxX; col++) {
         for (let row = minY; row <= maxY; row++) {
-            let x = hexSize * 1.5 * col + offsetX + margin;
-            let y = hexHeight * row + offsetY + margin;
+            let x = hexSize * 1.5 * col + state.offsetX + margin;
+            let y = hexHeight * row + state.offsetY + margin;
             if (col % 2 !== 0) y += hexHeight / 2;
             
             // Fast bounds check for the region
@@ -141,7 +142,7 @@ function drawVisibleHexesInRegion(startX, startY, width, height) {
             const tileId = `${col},${row}`;
             newVisibleTiles.add(tileId);
             
-            const tileType = gameState.tiles[col][row].type;
+            const tileType = state.gameState.tiles[col][row].type;
             tilesByType[tileType].push({ x, y });
             
             // Track tile render for performance measurement
@@ -171,20 +172,20 @@ function drawVisibleHexesInRegion(startX, startY, width, height) {
 
 // Draw units, buildings and move range
 function drawDynamicElements(ctx, canvas) {
-    const hexSize = 30 * zoom;
+    const hexSize = 30 * state.zoom;
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = hexHeight; // Match the margin used in state.js
     
     // Draw move range
-    if (moveRange.length > 0) {
+    if (state.moveRange.length > 0) {
         ctx.save();
         ctx.lineWidth = 3;
         ctx.strokeStyle = '#ffffff';
         
         const moveRangeTiles = [];
-        for (const {col, row} of moveRange) {
-            let x = hexSize * 1.5 * col + offsetX + margin;
-            let y = hexHeight * row + offsetY + margin;
+        for (const {col, row} of state.moveRange) {
+            let x = hexSize * 1.5 * col + state.offsetX + margin;
+            let y = hexHeight * row + state.offsetY + margin;
             if (col % 2 !== 0) y += hexHeight / 2;
             
             if (isHexVisible(x, y, hexSize, canvas)) {
@@ -197,16 +198,16 @@ function drawDynamicElements(ctx, canvas) {
     }
     
     // Draw units and buildings
-    if (gameState.units.length > 0 || gameState.buildings.length > 0) {
+    if (state.gameState.units.length > 0 || state.gameState.buildings.length > 0) {
         // Calculate visible area with correct margins
         const visibleCols = Math.ceil(canvas.width / (hexSize * 1.5)) + 4;
         const visibleRows = Math.ceil(canvas.height / hexHeight) + 4;
 
         // Calculate bounds using the same logic as drawVisibleHexesInRegion
-        const minCol = Math.max(0, Math.floor((-offsetX - margin) / (hexSize * 1.5)));
-        const maxCol = Math.min(COLS - 1, Math.ceil((canvas.width - offsetX + margin) / (hexSize * 1.5)));
-        const minRow = Math.max(0, Math.floor((-offsetY - margin) / hexHeight));
-        const maxRow = Math.min(ROWS - 1, Math.ceil((canvas.height - offsetY + margin) / hexHeight));
+        const minCol = Math.max(0, Math.floor((-state.offsetX - margin) / (hexSize * 1.5)));
+        const maxCol = Math.min(state.COLS - 1, Math.ceil((canvas.width - state.offsetX + margin) / (hexSize * 1.5)));
+        const minRow = Math.max(0, Math.floor((-state.offsetY - margin) / hexHeight));
+        const maxRow = Math.min(state.ROWS - 1, Math.ceil((canvas.height - state.offsetY + margin) / hexHeight));
 
         // Debug: Draw culling viewport rectangle
         // ctx.save();
@@ -214,8 +215,8 @@ function drawDynamicElements(ctx, canvas) {
         // ctx.lineWidth = 2;
         // ctx.beginPath();
         // Convert grid coordinates to screen coordinates
-        // const viewportLeft = hexSize * 1.5 * minCol + offsetX + margin;
-        // const viewportTop = hexHeight * minRow + offsetY + margin;
+        // const viewportLeft = hexSize * 1.5 * minCol + state.offsetX + margin;
+        // const viewportTop = hexHeight * minRow + state.offsetY + margin;
         // const viewportWidth = hexSize * 1.5 * (maxCol - minCol + 1);
         // const viewportHeight = hexHeight * (maxRow - minRow + 1);
         // ctx.rect(viewportLeft, viewportTop, viewportWidth, viewportHeight);
@@ -228,23 +229,23 @@ function drawDynamicElements(ctx, canvas) {
         // ctx.restore();
         
         // Draw units with same bounds checking
-        for (const unit of gameState.units) {
+        for (const unit of state.gameState.units) {
             if (unit.col >= minCol && unit.col <= maxCol && unit.row >= minRow && unit.row <= maxRow) {
-                let x = hexSize * 1.5 * unit.col + offsetX + margin;
-                let y = hexHeight * unit.row + offsetY + margin;
+                let x = hexSize * 1.5 * unit.col + state.offsetX + margin;
+                let y = hexHeight * unit.row + state.offsetY + margin;
                 if (unit.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
-                    drawUnit(x, y, hexSize, unit.moved, unit.owner === gameState.currentPlayer, ctx);
+                    drawUnit(x, y, hexSize, unit.moved, unit.owner === state.gameState.currentPlayer, ctx);
                 }
             }
         }
         
         // Draw buildings with same bounds checking
-        for (const building of gameState.buildings) {
+        for (const building of state.gameState.buildings) {
             if (building.col >= minCol && building.col <= maxCol && building.row >= minRow && building.row <= maxRow) {
-                let x = hexSize * 1.5 * building.col + offsetX + margin;
-                let y = hexHeight * building.row + offsetY + margin;
+                let x = hexSize * 1.5 * building.col + state.offsetX + margin;
+                let y = hexHeight * building.row + state.offsetY + margin;
                 if (building.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
@@ -265,16 +266,16 @@ function isHexVisible(x, y, size, canvas) {
 
 // Utility functions for faster entity lookup
 function findUnitAt(col, row) {
-    for (let i = 0; i < gameState.units.length; i++) {
-        const unit = gameState.units[i];
+    for (let i = 0; i < state.gameState.units.length; i++) {
+        const unit = state.gameState.units[i];
         if (unit.col === col && unit.row === row) return unit;
     }
     return null;
 }
 
 function findBuildingAt(col, row) {
-    for (let i = 0; i < gameState.buildings.length; i++) {
-        const building = gameState.buildings[i];
+    for (let i = 0; i < state.gameState.buildings.length; i++) {
+        const building = state.gameState.buildings[i];
         if (building.col === col && building.row === row) return building;
     }
     return null;

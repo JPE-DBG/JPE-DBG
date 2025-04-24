@@ -106,6 +106,26 @@ export function getVisibleBounds() {
     return viewportState;
 }
 
+// Export a function to clear the hex position cache
+export function clearHexPositionCache() {
+    hexPositionCache.clear();
+}
+
+// Fetch game state without updating the input fields
+export async function fetchGamePreserveInputs(draw = true, scheduleDrawGrid) {
+    const res = await fetch('/api/game');
+    gameState = await res.json();
+    COLS = gameState.cols;
+    ROWS = gameState.rows;
+    mapData = { tiles: gameState.tiles };
+
+    // Clear caches when map changes
+    hexPositionCache.clear();
+    updateVisibleBounds();
+
+    if (draw && typeof scheduleDrawGrid === 'function') scheduleDrawGrid();
+}
+
 export async function fetchGame(draw = true, scheduleDrawGrid) {
     const res = await fetch('/api/game');
     gameState = await res.json();
@@ -151,15 +171,20 @@ export function getHexAt(mx, my) {
     const hexHeight = Math.sqrt(3) * hexSize;
     const margin = hexHeight; // Match the margin used in rendering.js
     
-    if (!mapData) return null;
+    if (!mapData || !mapData.tiles || !gameState || !gameState.tiles) return null;
     
     // Quick bounds check using visible area
     const bounds = getVisibleBounds();
     for (let col = bounds.minVisibleCol; col <= bounds.maxVisibleCol; col++) {
         for (let row = bounds.minVisibleRow; row <= bounds.maxVisibleRow; row++) {
+            // Check array bounds to avoid errors
+            if (col < 0 || col >= COLS || row < 0 || row >= ROWS) continue;
+            if (!gameState.tiles[col] || !gameState.tiles[col][row]) continue;
+            
             const pos = getHexPosition(col, row);
             if (pointInHex(mx, my, pos.x, pos.y, hexSize)) {
-                if (mapData.tiles[col][row].type === 'land') return {col, row};
+                // Make sure tile exists and is land before returning
+                if (gameState.tiles[col][row].type === 'land') return {col, row};
                 return null;
             }
         }

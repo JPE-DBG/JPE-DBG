@@ -109,10 +109,87 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
     });
 
     document.getElementById('regenMapBtn')?.addEventListener('click', async () => {
-        const cols = parseInt(document.getElementById('mapCols').value, 10) || 100;
-        const rows = parseInt(document.getElementById('mapRows').value, 10) || 100;
-        await fetch(`/api/game?regen=1&cols=${cols}&rows=${rows}`);
-        debouncedGameUpdate();
+        // Store the user's edited values in variables
+        const userColsValue = document.getElementById('mapCols').value;
+        const userRowsValue = document.getElementById('mapRows').value;
+        const cols = parseInt(userColsValue, 10) || 100;
+        const rows = parseInt(userRowsValue, 10) || 100;
+        
+        // Generate a unique parameter to prevent caching
+        const timestamp = Date.now();
+        
+        try {
+            console.log(`Regenerating map with dimensions: ${cols}x${rows}`);
+            
+            // Make the API call with the user's values
+            const response = await fetch(`/api/game?regen=1&cols=${cols}&rows=${rows}&_=${timestamp}`);
+            if (!response.ok) {
+                throw new Error(`Server responded with ${response.status}`);
+            }
+            
+            // Get the game state directly from this response without making another call
+            const newGameState = await response.json();
+            console.log("Received new game state from server:", 
+                       `${newGameState.cols}x${newGameState.rows} map, ` + 
+                       `${newGameState.tiles.length} column arrays`);
+            
+            // Make sure we properly update the game state with all required properties
+            state.gameState = newGameState;
+            state.COLS = newGameState.cols;
+            state.ROWS = newGameState.rows;
+            state.mapData = { tiles: newGameState.tiles };
+            
+            // Force the input fields to keep the user's entered values
+            document.getElementById('mapCols').value = userColsValue;
+            document.getElementById('mapRows').value = userRowsValue;
+            
+            // Reset selection state
+            state.setSelectedTile(null);
+            state.setMoveRange([]);
+            
+            // Clear any cached positions
+            state.clearHexPositionCache();
+            
+            // Reset the lastDrawnState to force a complete redraw
+            if (window.lastDrawnState) {
+                window.lastDrawnState = {
+                    offsetX: 0,
+                    offsetY: 0,
+                    zoom: 0, // Different from current zoom to force redraw
+                    visibleTiles: new Set(),
+                    lastDrawnTiles: new Map()
+                };
+            }
+            
+            // Recenter the map with the new dimensions
+            const hexSize = 30 * state.zoom;
+            const hexHeight = Math.sqrt(3) * hexSize;
+            const margin = 20;
+            const mapCenterX = (state.COLS * 1.5 * hexSize) / 2 + margin;
+            const mapCenterY = (state.ROWS * hexHeight) / 2 + margin;
+            const canvasCenterX = canvas.width / 2;
+            const canvasCenterY = canvas.height / 2;
+            
+            // Center the map and make sure it's visible
+            state.setOffset(canvasCenterX - mapCenterX, canvasCenterY - mapCenterY);
+            
+            // Force a complete redraw by clearing the offscreen canvas
+            if (window.offscreenCanvas) {
+                const offscreenCtx = window.offscreenCanvas.getContext('2d');
+                offscreenCtx.clearRect(0, 0, window.offscreenCanvas.width, window.offscreenCanvas.height);
+                console.log("Cleared offscreen canvas for complete redraw");
+            }
+            
+            // Schedule a redraw with a slight delay to ensure state is updated
+            setTimeout(() => {
+                scheduleDrawGrid();
+                console.log("Map regenerated and redrawn");
+            }, 50);
+            
+        } catch (error) {
+            console.error("Error regenerating map:", error);
+            alert("Error regenerating map: " + error.message);
+        }
     });
 
     // Optimized click handler with efficient hit detection
