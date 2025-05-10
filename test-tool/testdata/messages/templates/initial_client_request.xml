@@ -1,0 +1,11 @@
+<ClientRequest>
+    <Header>
+        <MsgType>pain.001.001.09</MsgType>
+    </Header>
+    <Body>
+        <TXID>{{.TXID}}</TXID>
+        <Amount>{{.Amount}}</Amount>
+        <Currency>{{.Currency}}</Currency>
+        <!-- Add other relevant fields for an initial request -->
+    </Body>
+</ClientRequest>

@@ -1,0 +1,8 @@
+{
+  "elsaApiBaseUrl": "http://localhost:8080",
+  "t2sClientRequestQueuePath": "testdata/mock_mq_queues/receiver_t2s/in",
+  "t2sAcceptanceQueuePath": "testdata/mock_mq_queues/receiver_t2s/in",
+  "mockMqRootDir": "testdata/mock_mq_queues",
+  "pollingIntervalSeconds": 1,
+  "pollingTimeoutSeconds": 60
+}

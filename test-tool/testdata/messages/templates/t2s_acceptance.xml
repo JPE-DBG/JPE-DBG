@@ -1,0 +1,19 @@
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:sese.024.001.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:sese.024.001.13 sese.024.001.13.xsd">
+	<SctiesSttlmTxStsAdvc>
+                <TxId>
+                    <AcctOwnrTxId>{{.TXID}}</AcctOwnrTxId>
+                    <MktInfrstrctrTxId>{{.MitiTXID}}</MktInfrstrctrTxId>
+                </TxId>
+		<PrcgSts>
+			<AckdAccptd>
+				<NoSpcfdRsn>NORE</NoSpcfdRsn>
+			</AckdAccptd>
+		</PrcgSts>
+		<!-- You can add other optional elements here if needed for different scenarios -->
+		<!-- For example:
+		<AddtlInf>
+			<Msg>{{.AdditionalInfo}}</Msg>
+		</AddtlInf>
+		-->
+	</SctiesSttlmTxStsAdvc>
+</Document>
