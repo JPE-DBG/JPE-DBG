@@ -49,21 +49,38 @@ func LoadConfig(filePath string) (*Config, error) {
 }
 
 func elsaServicesAreConfiguredFrom(ctx context.Context, configFile string) (context.Context, error) {
-	cfg, err := LoadConfig(configFile)
+	// Construct the correct path to the config file relative to the project root
+	correctConfigPath := filepath.Join("testdata", "config", configFile)
+	fmt.Printf("Attempting to load configuration from: %s\n", correctConfigPath) // Debug print
+
+	cfg, err := LoadConfig(correctConfigPath)
 	if err != nil {
-		return ctx, fmt.Errorf("failed to load configuration: %w", err)
+		return ctx, fmt.Errorf("failed to load configuration from '%s': %w", correctConfigPath, err)
 	}
 	// Ensure mock MQ directories exist
-	if err := os.MkdirAll(filepath.Dir(cfg.T2SClientRequestQueuePath), 0755); err != nil {
-		return ctx, fmt.Errorf("failed to create mock MQ dir for T2SClientRequestQueuePath: %w", err)
+	// These paths are relative to the project root as defined in elsa_services.json
+	if cfg.T2SClientRequestQueuePath != "" {
+		if err := os.MkdirAll(cfg.T2SClientRequestQueuePath, 0755); err != nil {
+			return ctx, fmt.Errorf("failed to create mock MQ dir for T2SClientRequestQueuePath ('%s'): %w", cfg.T2SClientRequestQueuePath, err)
+		}
+		fmt.Printf("Ensured directory exists: %s\n", cfg.T2SClientRequestQueuePath) // Debug print
 	}
-	if err := os.MkdirAll(filepath.Dir(cfg.T2SAcceptanceQueuePath), 0755); err != nil {
-		return ctx, fmt.Errorf("failed to create mock MQ dir for T2SAcceptanceQueuePath: %w", err)
+	if cfg.T2SAcceptanceQueuePath != "" {
+		if err := os.MkdirAll(cfg.T2SAcceptanceQueuePath, 0755); err != nil {
+			return ctx, fmt.Errorf("failed to create mock MQ dir for T2SAcceptanceQueuePath ('%s'): %w", cfg.T2SAcceptanceQueuePath, err)
+		}
+		fmt.Printf("Ensured directory exists: %s\n", cfg.T2SAcceptanceQueuePath) // Debug print
+	}
+	if cfg.MockMQRootDir != "" {
+		if err := os.MkdirAll(cfg.MockMQRootDir, 0755); err != nil {
+			return ctx, fmt.Errorf("failed to create mock MQ root dir ('%s'): %w", cfg.MockMQRootDir, err)
+		}
+		fmt.Printf("Ensured directory exists: %s\n", cfg.MockMQRootDir) // Debug print
 	}
 
 	return context.WithValue(ctx, ConfigKey, cfg), nil
 }
 
 func InitializeConfigSteps(s *godog.ScenarioContext) {
-	s.Step(`^the ELSA services are configured from "([^"]*)"$`, elsaServicesAreConfiguredFrom)
+	s.Step(`^the system is configured from "([^"]*)"$`, elsaServicesAreConfiguredFrom)
 }

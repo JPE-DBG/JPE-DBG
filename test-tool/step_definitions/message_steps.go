@@ -45,12 +45,17 @@ func t2sPreparesAMessageWithValues(ctx context.Context, templateFileName string,
 			}
 			fieldName := row.Cells[0].Value
 			fieldValue := row.Cells[1].Value
-			templateData[fieldName] = fieldValue
-			if fieldName == "TXID" {
+			templateData[fieldName] = fieldValue // Store with original field name
+
+			// Handle TXID variations for context and template
+			if fieldName == "TransactionId" || fieldName == "TXID" {
 				currentTXID = fieldValue
+				templateData["TXID"] = fieldValue // Ensure template data has "TXID" key
 			}
-			if fieldName == "MitiTXID" { // Store MitiTXID if present
+			// Handle MitiTXID variations (if Gherkin might use different names)
+			if fieldName == "MitiTransactionId" || fieldName == "MitiTXID" {
 				currentMitiTXID = fieldValue
+				templateData["MitiTXID"] = fieldValue // Ensure template data has "MitiTXID" key
 			}
 		}
 	}
@@ -80,7 +85,7 @@ func t2sPreparesAMessageWithValues(ctx context.Context, templateFileName string,
 	return newCtx, nil
 }
 
-func t2sSendsThePreparedMessageToQueueWithClientTXID(ctx context.Context, queueConfigKey string, clientTXID string) (context.Context, error) {
+func t2sSendsThePreparedMessageToQueueWithCorrelationID(ctx context.Context, queueIdentifierKey string, correlationID string) (context.Context, error) {
 	cfg, ok := ctx.Value(ConfigKey).(*Config)
 	if !ok || cfg == nil {
 		return ctx, fmt.Errorf("configuration not found in context")
@@ -92,25 +97,29 @@ func t2sSendsThePreparedMessageToQueueWithClientTXID(ctx context.Context, queueC
 	}
 
 	var queuePath string
-	switch queueConfigKey {
-	case "T2S client request queue":
+	switch queueIdentifierKey {
+	case "t2sClientRequestQueueName": // Matches the string in the feature file
 		queuePath = cfg.T2SClientRequestQueuePath
-	case "T2S acceptance queue":
+	case "t2sAcceptanceQueueName": // Matches the string in the feature file
 		queuePath = cfg.T2SAcceptanceQueuePath
 	default:
-		return ctx, fmt.Errorf("unknown queue configuration key: %s", queueConfigKey)
+		return ctx, fmt.Errorf("unknown queue identifier key: %s. Expected 't2sClientRequestQueueName' or 't2sAcceptanceQueueName'", queueIdentifierKey)
+	}
+
+	if queuePath == "" {
+		return ctx, fmt.Errorf("queue path is empty for identifier %s, check config elsa_services.json", queueIdentifierKey)
 	}
 
 	// Ensure the directory for the queue exists
+	// The queuePath from config is expected to be a directory.
 	err := os.MkdirAll(queuePath, 0755)
 	if err != nil {
 		return ctx, fmt.Errorf("failed to create mock MQ directory %s: %w", queuePath, err)
 	}
 
-	// Use clientTXID for the filename. Add suffix for acceptance to differentiate if needed.
-	fileName := clientTXID + ".xml"
-	if queueConfigKey == "T2S acceptance queue" {
-		fileName = clientTXID + "_accept.xml"
+	fileName := correlationID + ".xml"
+	if queueIdentifierKey == "t2sAcceptanceQueueName" {
+		fileName = correlationID + "_accept.xml"
 	}
 	filePath := filepath.Join(queuePath, fileName)
 
@@ -118,15 +127,16 @@ func t2sSendsThePreparedMessageToQueueWithClientTXID(ctx context.Context, queueC
 	if err != nil {
 		return ctx, fmt.Errorf("failed to write message to mock queue file %s: %w", filePath, err)
 	}
-	fmt.Printf("MockMQ: Message written to %s", filePath)
+	fmt.Printf("MockMQ: Message written to %s\\n", filePath)
 
-	// Store the clientTXID from this step, as it's explicitly provided and might be the one to use for API calls.
-	return context.WithValue(ctx, CurrentTXIDKey, clientTXID), nil
+	return context.WithValue(ctx, CurrentTXIDKey, correlationID), nil
 }
 
 func InitializeMessageSteps(s *godog.ScenarioContext) {
-	s.Step(`^T2S prepares an initial client request "([^"]*)" with values:$`, t2sPreparesAMessageWithValues)
-	s.Step(`^T2S prepares an acceptance message "([^"]*)" with values:$`, t2sPreparesAMessageWithValues)
-	s.Step(`^T2S sends the prepared message to the T2S client request queue with client TXID "([^"]*)"$`, t2sSendsThePreparedMessageToQueueWithClientTXID)
-	s.Step(`^T2S sends the prepared acceptance message to the T2S acceptance queue with client TXID "([^"]*)"$`, t2sSendsThePreparedMessageToQueueWithClientTXID)
+	s.Step(`^T2S prepares an initial client request message using template "([^"]*)" with values:$`, t2sPreparesAMessageWithValues)
+	s.Step(`^T2S prepares an acceptance message using template "([^"]*)" with values:$`, t2sPreparesAMessageWithValues)
+	s.Step(`^T2S sends the prepared message to the "([^"]*)" queue with correlation ID "([^"]*)"$`, t2sSendsThePreparedMessageToQueueWithCorrelationID)
+	// Remove or comment out old step definitions if they are no longer used by this new single step
+	// s.Step(\`^T2S sends the prepared message to the T2S client request queue with client TXID "([^"]*)"$\`, t2sSendsThePreparedMessageToQueueWithClientTXID)
+	// s.Step(\`^T2S sends the prepared acceptance message to the T2S acceptance queue with client TXID "([^"]*)"$\`, t2sSendsThePreparedMessageToQueueWithClientTXID)
 }
