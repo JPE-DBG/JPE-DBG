@@ -12,12 +12,14 @@ import (
 
 // Config holds the application configuration
 type Config struct {
-	ElsaAPIBaseURL            string `json:"elsaApiBaseUrl"`
-	T2SClientRequestQueuePath string `json:"t2sClientRequestQueuePath"`
-	T2SAcceptanceQueuePath    string `json:"t2sAcceptanceQueuePath"`
-	MockMQRootDir             string `json:"mockMqRootDir"`
-	PollingIntervalSeconds    int    `json:"pollingIntervalSeconds"`
-	PollingTimeoutSeconds     int    `json:"pollingTimeoutSeconds"`
+	ElsaAPIBaseURL              string `json:"elsaApiBaseUrl"`
+	T2SClientRequestQueuePath   string `json:"t2sClientRequestQueuePath"`
+	T2SAcceptanceQueuePath      string `json:"t2sAcceptanceQueuePath"`
+	CreationRequestQueuePath    string `json:"creationRequestQueuePath"`
+	CreationAcceptanceQueuePath string `json:"creationAcceptanceQueuePath"`
+	MockMQRootDir               string `json:"mockMqRootDir"`
+	PollingIntervalSeconds      int    `json:"pollingIntervalSeconds"`
+	PollingTimeoutSeconds       int    `json:"pollingTimeoutSeconds"`
 }
 
 // TestContextKey is used as a key for values in context.Context
@@ -59,23 +61,21 @@ func elsaServicesAreConfiguredFrom(ctx context.Context, configFile string) (cont
 	}
 	// Ensure mock MQ directories exist
 	// These paths are relative to the project root as defined in elsa_services.json
-	if cfg.T2SClientRequestQueuePath != "" {
-		if err := os.MkdirAll(cfg.T2SClientRequestQueuePath, 0755); err != nil {
-			return ctx, fmt.Errorf("failed to create mock MQ dir for T2SClientRequestQueuePath ('%s'): %w", cfg.T2SClientRequestQueuePath, err)
-		}
-		fmt.Printf("Ensured directory exists: %s\n", cfg.T2SClientRequestQueuePath) // Debug print
+	pathsToEnsure := []string{
+		cfg.T2SClientRequestQueuePath,
+		cfg.T2SAcceptanceQueuePath,
+		cfg.CreationRequestQueuePath,
+		cfg.CreationAcceptanceQueuePath,
+		cfg.MockMQRootDir,
 	}
-	if cfg.T2SAcceptanceQueuePath != "" {
-		if err := os.MkdirAll(cfg.T2SAcceptanceQueuePath, 0755); err != nil {
-			return ctx, fmt.Errorf("failed to create mock MQ dir for T2SAcceptanceQueuePath ('%s'): %w", cfg.T2SAcceptanceQueuePath, err)
+
+	for _, path := range pathsToEnsure {
+		if path != "" {
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return ctx, fmt.Errorf("failed to create mock MQ dir ('%s'): %w", path, err)
+			}
+			fmt.Printf("Ensured directory exists: %s\n", path) // Debug print
 		}
-		fmt.Printf("Ensured directory exists: %s\n", cfg.T2SAcceptanceQueuePath) // Debug print
-	}
-	if cfg.MockMQRootDir != "" {
-		if err := os.MkdirAll(cfg.MockMQRootDir, 0755); err != nil {
-			return ctx, fmt.Errorf("failed to create mock MQ root dir ('%s'): %w", cfg.MockMQRootDir, err)
-		}
-		fmt.Printf("Ensured directory exists: %s\n", cfg.MockMQRootDir) // Debug print
 	}
 
 	return context.WithValue(ctx, ConfigKey, cfg), nil
