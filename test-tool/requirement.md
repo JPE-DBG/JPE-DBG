@@ -5,7 +5,7 @@ System info:
 - its backend system with microservices
 - services comunicate using events stored in ibm mq queues
 - they share one common DB
-- system status can be obrained using rest API calls
+- system status can be obtained using rest API calls
 - system orchestrate communicatio between two primary systems
   - system 1 name is T2S
   - system 2 is CREATION
