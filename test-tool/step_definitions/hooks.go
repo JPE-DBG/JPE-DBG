@@ -100,13 +100,11 @@ func ensureMockServerIsRunningAndResetState(ctx context.Context) (context.Contex
 
 func mockElsaAPIServerIsRunning(ctx context.Context) (context.Context, error) {
 	fmt.Println("Step: mock ELSA API server is running")
-	newCtx, err := ensureMockServerIsRunningAndResetState(ctx)
-	if err != nil {
-		return newCtx, fmt.Errorf("failed to ensure mock server is running for step: %w", err)
+	if serverInstance == nil || serverErr != nil {
+		return ctx, fmt.Errorf("mock server is not running or encountered an error: %v", serverErr)
 	}
-	// The ensure function already resets state, so no need to do it again here.
-	fmt.Println("Mock ELSA API server is confirmed running and state is reset.")
-	return newCtx, nil
+	fmt.Println("Mock ELSA API server is confirmed running.")
+	return ctx, nil
 }
 
 // BeforeScenarioHook ensures the mock server is running and state is reset,
