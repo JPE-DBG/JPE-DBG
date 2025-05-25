@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"test-tool/mock_elsa_server"
 	"text/template"
 
 	"github.com/cucumber/godog"
@@ -128,6 +129,14 @@ func t2sSendsThePreparedMessageToQueueWithCorrelationID(ctx context.Context, que
 		return ctx, fmt.Errorf("failed to write message to mock queue file %s: %w", filePath, err)
 	}
 	fmt.Printf("MockMQ: Message written to %s\\n", filePath)
+
+	// After writing to the mock queue, simulate ELSA receiving the message by setting an initial status
+	mockServer, ok := ctx.Value(MockServerKey).(*mock_elsa_server.MockElsaAPIServer)
+	if !ok || mockServer == nil {
+		return ctx, fmt.Errorf("mock ELSA API server not found in context")
+	}
+
+	mockServer.SetInstructionStatus(correlationID, "created") // TODO
 
 	return context.WithValue(ctx, CurrentTXIDKey, correlationID), nil
 }

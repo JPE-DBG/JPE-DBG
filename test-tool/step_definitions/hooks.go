@@ -126,8 +126,8 @@ func BeforeScenarioHook(ctx context.Context, sc *godog.Scenario) (context.Contex
 		pathsToClean := []string{
 			cfg.T2SClientRequestQueuePath,
 			cfg.T2SAcceptanceQueuePath,
-			cfg.CreationRequestQueuePath,    // Now valid
-			cfg.CreationAcceptanceQueuePath, // Now valid
+			cfg.CreationRequestQueuePath,
+			cfg.CreationAcceptanceQueuePath,
 			// Add any other dynamic queue paths from config here
 		}
 		cleanedPaths := make(map[string]bool) // To avoid double processing
