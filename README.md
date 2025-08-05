@@ -1,7 +1,7 @@
 ## Go Coding
 - [Go tour](https://go.dev/tour/list)
 - [Effective Go](https://golang.org/doc/effective_go.html) (core basics, outdated for new features)
-- [CodeReviewComments]([https://github.com/golang/go/wiki/CodeReviewComments](https://go.dev/wiki/))
+- [CodeReviewComments](https://go.dev/wiki/))
 - [Style Guideline for Go Packages](https://rakyll.org/style-packages/)
 - [Go Naming](https://talks.golang.org/2014/names.slide#1)
 - [Theory of modern go](https://peter.bourgon.org/blog/2017/06/09/theory-of-modern-go.html)
