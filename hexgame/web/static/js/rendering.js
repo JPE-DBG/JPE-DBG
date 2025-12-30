@@ -401,3 +401,24 @@ export function drawBuilding(x, y, size, ctx) {
     ctx.strokeStyle = '#fff';
     ctx.stroke();
 }
+
+// Force a complete redraw by clearing caches and offscreen canvas
+export function invalidateDrawCache() {
+    try {
+        if (window.offscreenCanvas) {
+            const ctx = window.offscreenCanvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, window.offscreenCanvas.width, window.offscreenCanvas.height);
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+    lastDrawnState = {
+        offsetX: Number.NEGATIVE_INFINITY,
+        offsetY: Number.NEGATIVE_INFINITY,
+        zoom: Number.NaN,
+        visibleTiles: new Set(),
+        lastDrawnTiles: new Map()
+    };
+}

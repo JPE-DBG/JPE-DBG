@@ -1,5 +1,6 @@
 import * as state from './state.js';
 import * as perfMeasurement from './perfMeasurement.js';
+import { invalidateDrawCache } from './rendering.js';
 
 // Debounce helper for performance optimization
 function debounce(func, wait) {
@@ -148,6 +149,9 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
             
             // Clear any cached positions
             state.clearHexPositionCache();
+
+            // Invalidate rendering caches and offscreen canvas so a full redraw will occur
+            try { invalidateDrawCache(); } catch (e) { /* ignore */ }
             
             // Reset the lastDrawnState to force a complete redraw
             if (window.lastDrawnState) {
