@@ -133,11 +133,10 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                        `${newGameState.cols}x${newGameState.rows} map, ` + 
                        `${newGameState.tiles.length} column arrays`);
             
-            // Make sure we properly update the game state with all required properties
-            state.gameState = newGameState;
-            state.COLS = newGameState.cols;
-            state.ROWS = newGameState.rows;
-            state.mapData = { tiles: newGameState.tiles };
+            // Make sure we properly update the game state using exported setters
+            state.setGameState(newGameState);
+            state.setMapSize(newGameState.cols, newGameState.rows);
+            state.setMapData({ tiles: newGameState.tiles });
             
             // Force the input fields to keep the user's entered values
             document.getElementById('mapCols').value = userColsValue;

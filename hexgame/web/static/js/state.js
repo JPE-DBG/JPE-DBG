@@ -52,6 +52,7 @@ export function setPanning(pan) { isPanning = pan; }
 export function setPanStart(obj) { panStart = obj; }
 export function setMapData(data) { mapData = data; }
 export function setGameState(state) { gameState = state; }
+export function setMapSize(cols, rows) { COLS = cols; ROWS = rows; }
 export function setMapCenteredOnce(val) { mapCenteredOnce = val; }
 
 // Get cached or calculate hex position
