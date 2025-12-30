@@ -16,17 +16,27 @@ type Tile struct {
 }
 
 type Unit struct {
-	Col   int  `json:"col"`
-	Row   int  `json:"row"`
-	Moved bool `json:"moved"`
-	Owner int  `json:"owner"`
+	Col    int     `json:"col"`
+	Row    int     `json:"row"`
+	Moved  bool    `json:"moved"`
+	Owner  int     `json:"owner"`
+	Type   string  `json:"type"`   // "ship" or "troop"
+	Health int     `json:"health"` // max 10 for ships, 5 for troops
 }
 
 type Building struct {
-	Col   int `json:"col"`
-	Row   int `json:"row"`
-	Owner int `json:"owner"`
-	Level int `json:"level"`
+	Col    int    `json:"col"`
+	Row    int    `json:"row"`
+	Owner  int    `json:"owner"`
+	Level  int    `json:"level"`
+	Type   string `json:"type"` // "city", "port", "fort"
+}
+
+type Player struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Color   string `json:"color"`
+	Capital [2]int `json:"capital"` // [col, row]
 }
 
 type GameState struct {
@@ -35,6 +45,7 @@ type GameState struct {
 	Tiles         [][]Tile   `json:"tiles"`
 	Units         []Unit     `json:"units"`
 	Buildings     []Building `json:"buildings"`
+	Players       []Player   `json:"players"`
 	Turn          int        `json:"turn"`
 	CurrentPlayer int        `json:"currentPlayer"`
 }
@@ -43,12 +54,26 @@ var gameState *GameState
 
 func newGameState(cols, rows int) *GameState {
 	tiles := generateMapV3(cols, rows)
+	players := []Player{
+		{ID: 1, Name: "Player 1", Color: "#ff0000", Capital: [2]int{cols / 4, rows / 4}},
+		{ID: 2, Name: "Player 2", Color: "#0000ff", Capital: [2]int{3 * cols / 4, 3 * rows / 4}},
+	}
+	units := []Unit{}
+	buildings := []Building{}
+	for _, p := range players {
+		c := p.Capital
+		if tiles[c[0]][c[1]].Type == "land" {
+			buildings = append(buildings, Building{Col: c[0], Row: c[1], Owner: p.ID, Level: 1, Type: "city"})
+			units = append(units, Unit{Col: c[0], Row: c[1], Moved: false, Owner: p.ID, Type: "troop", Health: 5})
+		}
+	}
 	return &GameState{
 		Cols:          cols,
 		Rows:          rows,
 		Tiles:         tiles,
-		Units:         []Unit{},
-		Buildings:     []Building{},
+		Units:         units,
+		Buildings:     buildings,
+		Players:       players,
 		Turn:          1,
 		CurrentPlayer: 1,
 	}
@@ -73,7 +98,7 @@ func buildingAt(col, row int) bool {
 }
 
 // Returns a list of [col, row] pairs for valid move range
-func getMoveRange(col, row, rng int) [][2]int {
+func getMoveRange(col, row, rng int, unitType string) [][2]int {
 	if gameState == nil {
 		return nil
 	}
@@ -95,9 +120,17 @@ func getMoveRange(col, row, rng int) [][2]int {
 		}
 		for _, n := range hexNeighbors(c, r, gameState.Cols, gameState.Rows) {
 			nc, nr := n[0], n[1]
-			if !visited[nc][nr] && gameState.Tiles[nc][nr].Type == "land" && !unitAt(nc, nr) && !buildingAt(nc, nr) {
-				visited[nc][nr] = true
-				queue = append(queue, [3]int{nc, nr, dist + 1})
+			if !visited[nc][nr] {
+				valid := false
+				if unitType == "ship" {
+					valid = (gameState.Tiles[nc][nr].Type == "land" || gameState.Tiles[nc][nr].Type == "water") && !unitAt(nc, nr) && !buildingAt(nc, nr)
+				} else if unitType == "troop" {
+					valid = gameState.Tiles[nc][nr].Type == "land" && !unitAt(nc, nr) && !buildingAt(nc, nr)
+				}
+				if valid {
+					visited[nc][nr] = true
+					queue = append(queue, [3]int{nc, nr, dist + 1})
+				}
 			}
 		}
 	}

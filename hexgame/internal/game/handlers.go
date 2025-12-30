@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/json"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,7 +16,7 @@ type MapResponse struct {
 }
 
 type MoveRequest struct {
-	Type    string `json:"type"` // "move", "place_unit", "place_building"
+	Type    string `json:"type"` // "move", "place_ship", "place_troop", "place_city", "place_port", "place_fort", "attack"
 	FromCol int    `json:"fromCol,omitempty"`
 	FromRow int    `json:"fromRow,omitempty"`
 	ToCol   int    `json:"toCol"`
@@ -99,7 +100,13 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Type == "move" {
 		for i, u := range gameState.Units {
 			if u.Col == req.FromCol && u.Row == req.FromRow && !u.Moved && u.Owner == gameState.CurrentPlayer {
-				if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
+				valid := false
+				if u.Type == "ship" {
+					valid = (gameState.Tiles[req.ToCol][req.ToRow].Type == "land" || gameState.Tiles[req.ToCol][req.ToRow].Type == "water") && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow)
+				} else if u.Type == "troop" {
+					valid = gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow)
+				}
+				if valid {
 					gameState.Units[i].Col = req.ToCol
 					gameState.Units[i].Row = req.ToRow
 					gameState.Units[i].Moved = true
@@ -107,17 +114,86 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-	} else if req.Type == "place_unit" {
-		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
-			gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer})
+	} else if req.Type == "place_ship" {
+		// Check if there's a port at the position
+		hasPort := false
+		for _, b := range gameState.Buildings {
+			if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "port" && b.Owner == gameState.CurrentPlayer {
+				hasPort = true
+				break
+			}
 		}
-	} else if req.Type == "place_building" {
+		if hasPort && (gameState.Tiles[req.ToCol][req.ToRow].Type == "land" || gameState.Tiles[req.ToCol][req.ToRow].Type == "water") && !unitAt(req.ToCol, req.ToRow) {
+			gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "ship", Health: 10})
+		}
+	} else if req.Type == "place_troop" {
+		// Check if there's a city at the position
+		hasCity := false
+		for _, b := range gameState.Buildings {
+			if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "city" && b.Owner == gameState.CurrentPlayer {
+				hasCity = true
+				break
+			}
+		}
+		if hasCity && gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) {
+			gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "troop", Health: 5})
+		}
+	} else if req.Type == "place_city" {
 		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
-			gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1})
+			gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1, Type: "city"})
+		}
+	} else if req.Type == "place_port" {
+		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
+			gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1, Type: "port"})
+		}
+	} else if req.Type == "place_fort" {
+		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
+			gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1, Type: "fort"})
+		}
+	} else if req.Type == "attack" {
+		// Attack unit or building at target
+		attacker := -1
+		for i, u := range gameState.Units {
+			if u.Col == req.FromCol && u.Row == req.FromRow && u.Owner == gameState.CurrentPlayer {
+				attacker = i
+				break
+			}
+		}
+		if attacker >= 0 {
+			// Check if attacking unit
+			for i, u := range gameState.Units {
+				if u.Col == req.ToCol && u.Row == req.ToRow && u.Owner != gameState.CurrentPlayer {
+					// Simple combat: attacker health -= 1, defender health -= 1
+					gameState.Units[attacker].Health--
+					gameState.Units[i].Health--
+					if gameState.Units[attacker].Health <= 0 {
+						gameState.Units = append(gameState.Units[:attacker], gameState.Units[attacker+1:]...)
+					}
+					if gameState.Units[i].Health <= 0 {
+						gameState.Units = append(gameState.Units[:i], gameState.Units[i+1:]...)
+					}
+					break
+				}
+			}
+			// Check if attacking building
+			for i, b := range gameState.Buildings {
+				if b.Col == req.ToCol && b.Row == req.ToRow && b.Owner != gameState.CurrentPlayer {
+					// Damage building: reduce level
+					gameState.Buildings[i].Level--
+					if gameState.Buildings[i].Level <= 0 {
+						gameState.Buildings = append(gameState.Buildings[:i], gameState.Buildings[i+1:]...)
+					}
+					break
+				}
+			}
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(gameState)
+	select {
+	case broadcast <- gameState:
+	default:
+	}
 }
 
 func EndTurnHandler(w http.ResponseWriter, r *http.Request) {
@@ -125,22 +201,30 @@ func EndTurnHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// For one player, always reset all units' Moved flag
+	// Reset all units' Moved flag
 	for i := range gameState.Units {
 		gameState.Units[i].Moved = false
 	}
 	gameState.Turn++
-	// Keep CurrentPlayer always 1
-	gameState.CurrentPlayer = 1
+	// Cycle to next player
+	gameState.CurrentPlayer++
+	if gameState.CurrentPlayer > len(gameState.Players) {
+		gameState.CurrentPlayer = 1
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(gameState)
+	select {
+	case broadcast <- gameState:
+	default:
+	}
 }
 
 func MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 	type Req struct {
-		Col   int `json:"col"`
-		Row   int `json:"row"`
-		Range int `json:"range"`
+		Col      int    `json:"col"`
+		Row      int    `json:"row"`
+		Range    int    `json:"range"`
+		UnitType string `json:"unitType"`
 	}
 	type Resp struct {
 		Tiles [][2]int `json:"tiles"`
@@ -150,7 +234,47 @@ func MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	tiles := getMoveRange(req.Col, req.Row, req.Range)
+	tiles := getMoveRange(req.Col, req.Row, req.Range, req.UnitType)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Resp{Tiles: tiles})
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+var clients = make(map[*websocket.Conn]bool)
+var broadcast = make(chan *GameState)
+
+func WebSocketHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("WebSocket upgrade error:", err)
+		return
+	}
+	defer conn.Close()
+
+	clients[conn] = true
+
+	for {
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			delete(clients, conn)
+			break
+		}
+	}
+}
+
+func init() {
+	go func() {
+		for {
+			gameState := <-broadcast
+			for client := range clients {
+				if err := client.WriteJSON(gameState); err != nil {
+					client.Close()
+					delete(clients, client)
+				}
+			}
+		}
+	}()
 }

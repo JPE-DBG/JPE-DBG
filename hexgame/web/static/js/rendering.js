@@ -236,7 +236,7 @@ function drawDynamicElements(ctx, canvas) {
                 if (unit.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
-                    drawUnit(x, y, hexSize, unit.moved, unit.owner === state.gameState.currentPlayer, ctx);
+                    drawUnit(x, y, hexSize, unit.moved, unit.owner === state.gameState.currentPlayer, unit.type, unit.owner, ctx);
                 }
             }
         }
@@ -249,7 +249,7 @@ function drawDynamicElements(ctx, canvas) {
                 if (building.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
-                    drawBuilding(x, y, hexSize, ctx);
+                    drawBuilding(x, y, hexSize, building.type, building.owner, ctx);
                 }
             }
         }
@@ -373,18 +373,33 @@ export function drawHexOutline(x, y, size, outlineColor, lineWidth, ctx) {
     ctx.restore();
 }
 
-export function drawUnit(x, y, size, moved, isCurrentPlayer, ctx) {
+export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ctx) {
     ctx.beginPath();
-    ctx.arc(x, y, size/3, 0, 2*Math.PI);
+    if (unitType === 'ship') {
+        // Draw ship as triangle
+        ctx.moveTo(x, y - size/3);
+        ctx.lineTo(x - size/3, y + size/3);
+        ctx.lineTo(x + size/3, y + size/3);
+        ctx.closePath();
+    } else {
+        // Draw troop as circle
+        ctx.arc(x, y, size/3, 0, 2*Math.PI);
+    }
     
-    // logic for determining fillStyle
+    // Get player color
+    let playerColor = '#888';
+    if (state.gameState.players) {
+        const player = state.gameState.players.find(p => p.id === owner);
+        if (player) playerColor = player.color;
+    }
+    
     let unitColor;
     if (moved) {
         unitColor = '#bdbdbd'; // Grey if moved
     } else if (isCurrentPlayer) {
-        unitColor = '#e53935'; // Red if current player's unit and hasn't moved
+        unitColor = playerColor; // Player color if current player's unit and hasn't moved
     } else {
-        unitColor = '#888';    // Darker grey for other players' units that haven't moved
+        unitColor = playerColor; // Player color for other players
     }
     ctx.fillStyle = unitColor;
     
@@ -393,10 +408,30 @@ export function drawUnit(x, y, size, moved, isCurrentPlayer, ctx) {
     ctx.stroke();
 }
 
-export function drawBuilding(x, y, size, ctx) {
+export function drawBuilding(x, y, size, buildingType, owner, ctx) {
     ctx.beginPath();
-    ctx.rect(x-size/4, y-size/4, size/2, size/2);
-    ctx.fillStyle = '#3949ab';
+    if (buildingType === 'city') {
+        // Draw city as square
+        ctx.rect(x-size/4, y-size/4, size/2, size/2);
+    } else if (buildingType === 'port') {
+        // Draw port as circle
+        ctx.arc(x, y, size/4, 0, 2*Math.PI);
+    } else if (buildingType === 'fort') {
+        // Draw fort as triangle
+        ctx.moveTo(x, y - size/4);
+        ctx.lineTo(x - size/4, y + size/4);
+        ctx.lineTo(x + size/4, y + size/4);
+        ctx.closePath();
+    }
+    
+    // Get player color
+    let playerColor = '#3949ab';
+    if (state.gameState.players) {
+        const player = state.gameState.players.find(p => p.id === owner);
+        if (player) playerColor = player.color;
+    }
+    
+    ctx.fillStyle = playerColor;
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.stroke();

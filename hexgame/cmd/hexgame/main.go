@@ -36,6 +36,7 @@ func main() {
 	http.HandleFunc("/api/move", game.MoveHandler)
 	http.HandleFunc("/api/move-range", game.MoveRangeHandler)
 	http.HandleFunc("/api/endturn", game.EndTurnHandler)
+	http.HandleFunc("/ws", game.WebSocketHandler)
 
 	log.Printf("Starting with map size %dx%d", *cols, *rows)
 	log.Println("Serving on http://localhost:8080 ...")

@@ -57,6 +57,14 @@ async function initGame() {
         ROWS: state.ROWS,
     });
     
+    // Connect to WebSocket
+    const ws = new WebSocket('ws://localhost:8080/ws');
+    ws.onmessage = (event) => {
+        const newGameState = JSON.parse(event.data);
+        state.setGameState(newGameState);
+        scheduleDrawGrid();
+    };
+    
     // Schedule the first draw
     scheduleDrawGrid();
     

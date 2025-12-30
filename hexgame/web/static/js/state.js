@@ -140,6 +140,15 @@ export async function fetchGame(draw = true, scheduleDrawGrid) {
     if (colsInput) colsInput.value = COLS;
     if (rowsInput) rowsInput.value = ROWS;
 
+    // Update turn and player info
+    const turnInfo = document.getElementById('turnInfo');
+    const playerInfo = document.getElementById('playerInfo');
+    if (turnInfo) turnInfo.textContent = `Turn: ${gameState.turn}`;
+    if (playerInfo && gameState.players) {
+        const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
+        if (currentPlayer) playerInfo.textContent = `Player: ${currentPlayer.name}`;
+    }
+
     // Clear caches when map changes
     hexPositionCache.clear();
     updateVisibleBounds();

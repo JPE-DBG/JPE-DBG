@@ -212,17 +212,24 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         
         if (state.selectedBarType) {
             // Place unit or building
-            const type = state.selectedBarType === 'unit' ? 'place_unit' : 'place_building';
-            await fetch('/api/move', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, toCol: col, toRow: row })
-            });
-            // Update game state and clear selection
-            state.setSelectedBarType(null);
-            document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
-            await debouncedGameUpdate();
-            scheduleDrawGrid();
+            let type = '';
+            if (state.selectedBarType === 'troop') type = 'place_troop';
+            else if (state.selectedBarType === 'ship') type = 'place_ship';
+            else if (state.selectedBarType === 'city') type = 'place_city';
+            else if (state.selectedBarType === 'port') type = 'place_port';
+            else if (state.selectedBarType === 'fort') type = 'place_fort';
+            if (type) {
+                await fetch('/api/move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, toCol: col, toRow: row })
+                });
+                // Update game state and clear selection
+                state.setSelectedBarType(null);
+                document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
+                await debouncedGameUpdate();
+                scheduleDrawGrid();
+            }
         } else if (unit) {
             // Handle unit selection
             state.setSelectedTile({col, row});
@@ -230,7 +237,7 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                 const res = await fetch('/api/move-range', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ col, row, range: 5 })
+                    body: JSON.stringify({ col, row, range: 5, unitType: unit.type })
                 });
                 const data = await res.json();
                 state.setMoveRange(data.tiles.map(([c, r]) => ({col: c, row: r})));
@@ -258,6 +265,25 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                 state.setSelectedTile({col, row});
             }
             
+        } else if (state.selectedTile && (unit || building) && (unit && unit.owner !== state.gameState.currentPlayer || building && building.owner !== state.gameState.currentPlayer)) {
+            // Attack enemy unit or building
+            const inRange = state.moveRange.some(t => t.col === col && t.row === row);
+            if (inRange) {
+                await fetch('/api/move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'attack',
+                        fromCol: state.selectedTile.col,
+                        fromRow: state.selectedTile.row,
+                        toCol: col,
+                        toRow: row
+                    })
+                });
+                debouncedGameUpdate();
+                state.setSelectedTile(null);
+                state.setMoveRange([]);
+            }
         } else {
             // Clear selection
             state.setSelectedTile(null);
