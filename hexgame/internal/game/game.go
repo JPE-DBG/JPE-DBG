@@ -16,27 +16,34 @@ type Tile struct {
 }
 
 type Unit struct {
-	Col    int     `json:"col"`
-	Row    int     `json:"row"`
-	Moved  bool    `json:"moved"`
-	Owner  int     `json:"owner"`
-	Type   string  `json:"type"`   // "ship" or "troop"
-	Health int     `json:"health"` // max 10 for ships, 5 for troops
+	Col     int    `json:"col"`
+	Row     int    `json:"row"`
+	Moved   bool   `json:"moved"`
+	Owner   int    `json:"owner"`
+	Type    string `json:"type"`   // "ship" or "troop"
+	Tier    int    `json:"tier"`   // 1: basic, 2: advanced, 3: elite
+	Health  int    `json:"health"` // max 10 for ships, 5 for troops
+	Attack  int    `json:"attack"`
+	Defense int    `json:"defense"`
 }
 
 type Building struct {
-	Col    int    `json:"col"`
-	Row    int    `json:"row"`
-	Owner  int    `json:"owner"`
-	Level  int    `json:"level"`
-	Type   string `json:"type"` // "city", "port", "fort"
+	Col   int    `json:"col"`
+	Row   int    `json:"row"`
+	Owner int    `json:"owner"`
+	Level int    `json:"level"`
+	Type  string `json:"type"` // "city", "port", "fort"
 }
 
 type Player struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Color   string `json:"color"`
-	Capital [2]int `json:"capital"` // [col, row]
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Color    string `json:"color"`
+	Capital  [2]int `json:"capital"`
+	Gold     int    `json:"gold"`
+	Wood     int    `json:"wood"`
+	Iron     int    `json:"iron"`
+	Research int    `json:"research"`
 }
 
 type GameState struct {
@@ -55,8 +62,8 @@ var gameState *GameState
 func newGameState(cols, rows int) *GameState {
 	tiles := generateMapV3(cols, rows)
 	players := []Player{
-		{ID: 1, Name: "Player 1", Color: "#ff0000", Capital: [2]int{cols / 4, rows / 4}},
-		{ID: 2, Name: "Player 2", Color: "#0000ff", Capital: [2]int{3 * cols / 4, 3 * rows / 4}},
+		{ID: 1, Name: "Player 1", Color: "#ff0000", Capital: [2]int{cols / 4, rows / 4}, Gold: 100, Wood: 50, Iron: 20, Research: 0},
+		{ID: 2, Name: "Player 2", Color: "#0000ff", Capital: [2]int{3 * cols / 4, 3 * rows / 4}, Gold: 100, Wood: 50, Iron: 20, Research: 0},
 	}
 	units := []Unit{}
 	buildings := []Building{}
@@ -64,7 +71,7 @@ func newGameState(cols, rows int) *GameState {
 		c := p.Capital
 		if tiles[c[0]][c[1]].Type == "land" {
 			buildings = append(buildings, Building{Col: c[0], Row: c[1], Owner: p.ID, Level: 1, Type: "city"})
-			units = append(units, Unit{Col: c[0], Row: c[1], Moved: false, Owner: p.ID, Type: "troop", Health: 5})
+			units = append(units, Unit{Col: c[0], Row: c[1], Moved: false, Owner: p.ID, Type: "troop", Tier: 1, Health: 5, Attack: 2, Defense: 1})
 		}
 	}
 	return &GameState{

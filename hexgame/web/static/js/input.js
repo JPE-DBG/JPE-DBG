@@ -215,6 +215,8 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
             let type = '';
             if (state.selectedBarType === 'troop') type = 'place_troop';
             else if (state.selectedBarType === 'ship') type = 'place_ship';
+            else if (state.selectedBarType === 'advanced_troop') type = 'place_advanced_troop';
+            else if (state.selectedBarType === 'advanced_ship') type = 'place_advanced_ship';
             else if (state.selectedBarType === 'city') type = 'place_city';
             else if (state.selectedBarType === 'port') type = 'place_port';
             else if (state.selectedBarType === 'fort') type = 'place_fort';

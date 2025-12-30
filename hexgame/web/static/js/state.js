@@ -143,10 +143,15 @@ export async function fetchGame(draw = true, scheduleDrawGrid) {
     // Update turn and player info
     const turnInfo = document.getElementById('turnInfo');
     const playerInfo = document.getElementById('playerInfo');
+    const resourcesInfo = document.getElementById('resourcesInfo');
     if (turnInfo) turnInfo.textContent = `Turn: ${gameState.turn}`;
     if (playerInfo && gameState.players) {
         const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
         if (currentPlayer) playerInfo.textContent = `Player: ${currentPlayer.name}`;
+    }
+    if (resourcesInfo && gameState.players) {
+        const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
+        if (currentPlayer) resourcesInfo.textContent = `Gold: ${currentPlayer.gold} Wood: ${currentPlayer.wood} Iron: ${currentPlayer.iron} Research: ${currentPlayer.research}`;
     }
 
     // Clear caches when map changes

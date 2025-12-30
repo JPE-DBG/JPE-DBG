@@ -236,7 +236,7 @@ function drawDynamicElements(ctx, canvas) {
                 if (unit.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
-                    drawUnit(x, y, hexSize, unit.moved, unit.owner === state.gameState.currentPlayer, unit.type, unit.owner, ctx);
+                    drawUnit(x, y, hexSize, unit.moved, unit.owner === state.gameState.currentPlayer, unit.type, unit.owner, unit.tier, ctx);
                 }
             }
         }
@@ -249,7 +249,7 @@ function drawDynamicElements(ctx, canvas) {
                 if (building.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
-                    drawBuilding(x, y, hexSize, building.type, building.owner, ctx);
+                    drawBuilding(x, y, hexSize, building.type, building.owner, building.level, ctx);
                 }
             }
         }
@@ -373,17 +373,20 @@ export function drawHexOutline(x, y, size, outlineColor, lineWidth, ctx) {
     ctx.restore();
 }
 
-export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ctx) {
+export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, tier, ctx) {
+    const unitTier = tier || 1; // Default to 1 if undefined
+    const scale = 0.8 + unitTier * 0.2; // Larger for higher tiers
+    const drawSize = size * scale;
     ctx.beginPath();
     if (unitType === 'ship') {
         // Draw ship as triangle
-        ctx.moveTo(x, y - size/3);
-        ctx.lineTo(x - size/3, y + size/3);
-        ctx.lineTo(x + size/3, y + size/3);
+        ctx.moveTo(x, y - drawSize/3);
+        ctx.lineTo(x - drawSize/3, y + drawSize/3);
+        ctx.lineTo(x + drawSize/3, y + drawSize/3);
         ctx.closePath();
     } else {
         // Draw troop as circle
-        ctx.arc(x, y, size/3, 0, 2*Math.PI);
+        ctx.arc(x, y, drawSize/3, 0, 2*Math.PI);
     }
     
     // Get player color
@@ -397,7 +400,9 @@ export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ct
     if (moved) {
         unitColor = '#bdbdbd'; // Grey if moved
     } else if (isCurrentPlayer) {
-        unitColor = playerColor; // Player color if current player's unit and hasn't moved
+        // Blink for movable units
+        const blink = Math.sin(Date.now() / 200) > 0;
+        unitColor = blink ? playerColor : '#ffffff';
     } else {
         unitColor = playerColor; // Player color for other players
     }
@@ -408,32 +413,41 @@ export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ct
     ctx.stroke();
 }
 
-export function drawBuilding(x, y, size, buildingType, owner, ctx) {
+export function drawBuilding(x, y, size, buildingType, owner, level, ctx) {
+    const buildingLevel = level || 1; // Default to 1 if undefined
+    const scale = 0.8 + buildingLevel * 0.2;
+    const drawSize = size * scale;
     ctx.beginPath();
-    if (buildingType === 'city') {
-        // Draw city as square
-        ctx.rect(x-size/4, y-size/4, size/2, size/2);
-    } else if (buildingType === 'port') {
-        // Draw port as circle
-        ctx.arc(x, y, size/4, 0, 2*Math.PI);
-    } else if (buildingType === 'fort') {
-        // Draw fort as triangle
-        ctx.moveTo(x, y - size/4);
-        ctx.lineTo(x - size/4, y + size/4);
-        ctx.lineTo(x + size/4, y + size/4);
-        ctx.closePath();
+    
+    // Draw building as a hexagon
+    for (let i = 0; i < 6; i++) {
+        const px = x + drawSize * hexPoints[i].x;
+        const py = y + drawSize * hexPoints[i].y;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
     }
     
-    // Get player color
-    let playerColor = '#3949ab';
+    ctx.closePath();
+    
+    // Get owner color
+    let ownerColor = '#888';
     if (state.gameState.players) {
         const player = state.gameState.players.find(p => p.id === owner);
-        if (player) playerColor = player.color;
+        if (player) ownerColor = player.color;
     }
     
-    ctx.fillStyle = playerColor;
+    ctx.fillStyle = ownerColor;
     ctx.fill();
-    ctx.strokeStyle = '#fff';
+    
+    // Draw level indicator
+    ctx.fillStyle = '#fff';
+    ctx.font = `${Math.floor(drawSize / 3)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`L${buildingLevel}`, x, y);
+    
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 2;
     ctx.stroke();
 }
 
@@ -442,18 +456,13 @@ export function invalidateDrawCache() {
     try {
         if (window.offscreenCanvas) {
             const ctx = window.offscreenCanvas.getContext('2d');
-            if (ctx) {
-                ctx.clearRect(0, 0, window.offscreenCanvas.width, window.offscreenCanvas.height);
-            }
+            ctx.clearRect(0, 0, window.offscreenCanvas.width, window.offscreenCanvas.height);
+        }
+        if (window.lastDrawnState) {
+            window.lastDrawnState.visibleTiles.clear();
+            window.lastDrawnState.lastDrawnTiles.clear();
         }
     } catch (e) {
-        // ignore
+        // Ignore errors
     }
-    lastDrawnState = {
-        offsetX: Number.NEGATIVE_INFINITY,
-        offsetY: Number.NEGATIVE_INFINITY,
-        zoom: Number.NaN,
-        visibleTiles: new Set(),
-        lastDrawnTiles: new Map()
-    };
 }
