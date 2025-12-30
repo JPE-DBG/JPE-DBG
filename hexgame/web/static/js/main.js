@@ -100,53 +100,64 @@ function hidePlayerSetup() {
 }
 
 function setupPlayerSelection() {
-    document.getElementById('joinPlayer1').addEventListener('click', async () => {
-        const name = document.getElementById('playerName').value || 'Player 1';
-        window.currentPlayerId = 1;
-        updatePlayerDisplay(name, 1);
-        hidePlayerSetup();
+    document.getElementById('joinGame').addEventListener('click', async () => {
+        const name = document.getElementById('playerName').value.trim() || 'Player';
         
-        // Send join request to server
-        await fetch('/api/join', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ playerId: 1, name: name })
-        });
-        
-        initGame();
-    });
-    
-    document.getElementById('joinPlayer2').addEventListener('click', async () => {
-        const name = document.getElementById('playerName').value || 'Player 2';
-        window.currentPlayerId = 2;
-        updatePlayerDisplay(name, 2);
-        hidePlayerSetup();
-        
-        // Send join request to server
-        await fetch('/api/join', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ playerId: 2, name: name })
-        });
-        
-        initGame();
+        try {
+            const response = await fetch('/api/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to join game');
+            }
+            
+            const data = await response.json();
+            
+            window.currentPlayerId = data.playerId;
+            
+            // Use the game state from the join response to immediately update the UI
+            if (data.gameState) {
+                state.setGameState(data.gameState);
+                scheduleDrawGrid();
+            }
+            
+            updatePlayerDisplay(name, data.playerId, data.color);
+            hidePlayerSetup();
+            
+            // Do the post-join setup without fetching game state again
+            resizeCanvas(true); // Skip draw, but sets canvas size
+            centerMapView();
+            state.setMapCenteredOnce(true);
+            
+            // Connect to WebSocket
+            const ws = new WebSocket('ws://localhost:8080/ws');
+            ws.onmessage = (event) => {
+                const newGameState = JSON.parse(event.data);
+                state.setGameState(newGameState);
+                scheduleDrawGrid();
+            };
+            
+            // Start animation loop
+            startAnimationLoop();
+        } catch (error) {
+            alert('Error joining game: ' + error.message);
+        }
     });
 }
 
-function updatePlayerDisplay(name, playerId) {
+function updatePlayerDisplay(name, playerId, playerColor) {
     const playerInfo = document.getElementById('playerInfo');
-    const resourcesInfo = document.getElementById('resourcesInfo');
     const playerNameDisplay = document.getElementById('player-name-display');
     
     if (playerInfo) {
         playerInfo.textContent = `You are ${name} (Player ${playerId})`;
     }
-    if (resourcesInfo) {
-        resourcesInfo.id = `resourcesInfo-${playerId}`;
-    }
     if (playerNameDisplay) {
         playerNameDisplay.textContent = `${name} (Player ${playerId})`;
-        playerNameDisplay.style.color = playerId === 1 ? '#ff0000' : '#0000ff'; // Player colors
+        playerNameDisplay.style.color = playerColor;
     }
     
     // Keep original tab title

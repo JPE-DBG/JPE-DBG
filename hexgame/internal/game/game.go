@@ -61,19 +61,9 @@ var gameState *GameState
 
 func newGameState(cols, rows int) *GameState {
 	tiles := generateMapV3(cols, rows)
-	players := []Player{
-		{ID: 1, Name: "Player 1", Color: "#ff0000", Capital: [2]int{cols / 4, rows / 4}, Gold: 100, Wood: 50, Iron: 20, Research: 0},
-		{ID: 2, Name: "Player 2", Color: "#0000ff", Capital: [2]int{3 * cols / 4, 3 * rows / 4}, Gold: 100, Wood: 50, Iron: 20, Research: 0},
-	}
+	players := []Player{} // Start with no default players
 	units := []Unit{}
 	buildings := []Building{}
-	for _, p := range players {
-		c := p.Capital
-		if tiles[c[0]][c[1]].Type == "land" {
-			buildings = append(buildings, Building{Col: c[0], Row: c[1], Owner: p.ID, Level: 1, Type: "city"})
-			units = append(units, Unit{Col: c[0], Row: c[1], Moved: false, Owner: p.ID, Type: "troop", Tier: 1, Health: 5, Attack: 2, Defense: 1})
-		}
-	}
 	return &GameState{
 		Cols:          cols,
 		Rows:          rows,
@@ -82,7 +72,7 @@ func newGameState(cols, rows int) *GameState {
 		Buildings:     buildings,
 		Players:       players,
 		Turn:          1,
-		CurrentPlayer: 1,
+		CurrentPlayer: 1, // Will be updated when first player joins
 	}
 }
 

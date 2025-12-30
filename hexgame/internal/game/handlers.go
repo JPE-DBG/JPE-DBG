@@ -401,13 +401,12 @@ func init() {
 
 func JoinHandler(w http.ResponseWriter, r *http.Request) {
 	if gameState == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		// Initialize gameState if it doesn't exist yet
+		gameState = newGameState(MapCols, MapRows)
 	}
 
 	type JoinRequest struct {
-		PlayerID int    `json:"playerId"`
-		Name     string `json:"name"`
+		Name string `json:"name"`
 	}
 
 	var req JoinRequest
@@ -416,18 +415,76 @@ func JoinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update player name
-	for i, p := range gameState.Players {
-		if p.ID == req.PlayerID {
-			gameState.Players[i].Name = req.Name
-			break
-		}
+	// Find the next available player ID
+	nextPlayerID := 1
+	usedIDs := make(map[int]bool)
+	for _, p := range gameState.Players {
+		usedIDs[p.ID] = true
+	}
+	for usedIDs[nextPlayerID] {
+		nextPlayerID++
+	}
+
+	// Create new player
+	newPlayer := Player{
+		ID:       nextPlayerID,
+		Name:     req.Name,
+		Color:    getPlayerColor(nextPlayerID),
+		Capital:  getPlayerCapital(nextPlayerID, gameState.Cols, gameState.Rows),
+		Gold:     100,
+		Wood:     50,
+		Iron:     20,
+		Research: 0,
+	}
+
+	gameState.Players = append(gameState.Players, newPlayer)
+
+	// If this is the first player, make them the current player
+	if len(gameState.Players) == 1 {
+		gameState.CurrentPlayer = nextPlayerID
+	}
+
+	// Create initial city and unit for the new player at their capital
+	c := newPlayer.Capital
+	if gameState.Tiles[c[0]][c[1]].Type == "land" && !unitAt(c[0], c[1]) && !buildingAt(c[0], c[1]) {
+		gameState.Buildings = append(gameState.Buildings, Building{
+			Col: c[0], Row: c[1], Owner: nextPlayerID, Level: 1, Type: "city",
+		})
+		gameState.Units = append(gameState.Units, Unit{
+			Col: c[0], Row: c[1], Moved: false, Owner: nextPlayerID,
+			Type: "troop", Tier: 1, Health: 5, Attack: 2, Defense: 1,
+		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(gameState)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"playerId":  nextPlayerID,
+		"color":     newPlayer.Color,
+		"capital":   newPlayer.Capital,
+		"gameState": gameState,
+	})
 	select {
 	case broadcast <- gameState:
 	default:
 	}
+}
+
+func getPlayerColor(playerID int) string {
+	colors := []string{"#ff0000", "#0000ff", "#00ff00", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#800080"}
+	return colors[(playerID-1)%len(colors)]
+}
+
+func getPlayerCapital(playerID int, cols, rows int) [2]int {
+	// Distribute players around the map corners
+	corners := [][2]int{
+		{cols / 4, rows / 4},         // Top-left
+		{3 * cols / 4, rows / 4},     // Top-right
+		{cols / 4, 3 * rows / 4},     // Bottom-left
+		{3 * cols / 4, 3 * rows / 4}, // Bottom-right
+		{cols / 2, rows / 4},         // Top-center
+		{cols / 2, 3 * rows / 4},     // Bottom-center
+		{cols / 4, rows / 2},         // Left-center
+		{3 * cols / 4, rows / 2},     // Right-center
+	}
+	return corners[(playerID-1)%len(corners)]
 }
