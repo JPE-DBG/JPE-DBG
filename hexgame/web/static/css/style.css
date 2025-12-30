@@ -150,3 +150,8 @@ body {
 #nextTurnBtn:hover {
     background: #ffe082;
 }
+
+/* Perf test UI tweaks */
+#perfTestUI { box-sizing: border-box; max-width: 420px; }
+#perfTestUI .perf-btn { box-sizing: border-box; }
+

@@ -34,19 +34,19 @@ export function createPerfTestUI() {
     
     perfTestDiv.innerHTML = `
         <h3 style="margin: 0 0 10px 0;">Performance Testing</h3>
-        <div style="margin-bottom: 10px;">
-            <button id="startPerfTest" style="margin-right: 5px; padding: 5px 10px; background: #4CAF50; border: none; color: white; border-radius: 3px;">Start Auto Test</button>
-            <button id="stopPerfTest" style="padding: 5px 10px; background: #F44336; border: none; color: white; border-radius: 3px;">Stop Recording</button>
+        <!-- simple 2-column grid: each button is placed into its own cell; columns size to largest content -->
+        <div class="perf-grid" style="display: grid; grid-template-columns: max-content max-content; gap: 6px 10px; margin-bottom: 6px; align-items: center;">
+            <button id="startPerfTest" class="perf-btn" style="padding: 5px 10px; background: #4CAF50; border: none; color: white; border-radius: 3px; grid-column: 1;">Start Auto Test</button>
+            <button id="stopPerfTest" class="perf-btn" style="padding: 5px 10px; background: #F44336; border: none; color: white; border-radius: 3px; grid-column: 2;">Stop Recording</button>
+
+            <button id="saveBaseline" class="perf-btn" style="padding: 5px 10px; background: #2196F3; border: none; color: white; border-radius: 3px; grid-column: 1;">Save as Baseline</button>
+            <button id="saveOptimization" class="perf-btn" style="padding: 5px 10px; background: #9C27B0; border: none; color: white; border-radius: 3px; grid-column: 2;">Save as Optimization</button>
+
+            <button id="resetMetrics" class="perf-btn" style="padding: 5px 10px; background: #607D8B; border: none; color: white; border-radius: 3px; grid-column: 1;">Reset Metrics</button>
+            <button id="clearAllData" class="perf-btn" style="padding: 5px 10px; background: #FF5722; border: none; color: white; border-radius: 3px; grid-column: 2;">Clear All Data</button>
         </div>
-        <div style="margin-bottom: 10px;">
-            <button id="saveBaseline" style="margin-right: 5px; padding: 5px 10px; background: #2196F3; border: none; color: white; border-radius: 3px;">Save as Baseline</button>
-            <button id="saveOptimization" style="padding: 5px 10px; background: #9C27B0; border: none; color: white; border-radius: 3px;">Save as Optimization</button>
-        </div>
-        <div style="margin-bottom: 10px;">
-            <button id="resetMetrics" style="margin-right: 5px; padding: 5px 10px; background: #607D8B; border: none; color: white; border-radius: 3px;">Reset Metrics</button>
-            <button id="clearAllData" style="padding: 5px 10px; background: #FF5722; border: none; color: white; border-radius: 3px;">Clear All Data</button>
-        </div>
-        <div id="recordingStatus" style="margin-top: 10px; display: none; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+
+        <div id="recordingStatus" style="margin-top: 10px; display: block; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
             <div class="status-text">Not recording</div>
             <div class="progress-bar" style="height: 5px; margin-top: 5px; background: #333;"><div class="progress" style="width: 0%; height: 100%; background: #4CAF50;"></div></div>
         </div>
@@ -91,11 +91,10 @@ function startStatusUpdateLoop() {
         const metrics = perfMeasurement.getPerfMetrics();
         const statusDiv = document.getElementById('recordingStatus');
         
+        // Always show the status box; update text and progress depending on metrics
+        const statusText = statusDiv.querySelector('.status-text');
+        const progress = statusDiv.querySelector('.progress');
         if (metrics.isRecording || metrics.isAutoScrolling) {
-            statusDiv.style.display = 'block';
-            const statusText = statusDiv.querySelector('.status-text');
-            const progress = statusDiv.querySelector('.progress');
-            
             // Display auto-scroll progress if active
             if (metrics.isAutoScrolling) {
                 const percent = (metrics.autoScrollPosition / metrics.autoScrollMaxPosition * 100);
@@ -115,7 +114,10 @@ function startStatusUpdateLoop() {
                 progress.style.background = '#4CAF50'; // Green
             }
         } else {
-            statusDiv.style.display = 'none';
+            // Idle: show not recording and clear progress
+            statusText.textContent = 'Not recording';
+            progress.style.width = '0%';
+            progress.style.background = '#4CAF50';
         }
         
         // Continue the loop
@@ -177,7 +179,14 @@ function stopPerfTrackingSession() {
     // Format and display the results
     const results = perfMeasurement.formatPerfResults(perfMeasurement.scrollMetrics);
     document.getElementById('perfResults').textContent = results;
-    document.getElementById('recordingStatus').style.display = 'none';
+    // Leave the recordingStatus visible; reset text/progress to idle state immediately
+    const statusDiv = document.getElementById('recordingStatus');
+    if (statusDiv) {
+        const statusText = statusDiv.querySelector('.status-text');
+        const progress = statusDiv.querySelector('.progress');
+        if (statusText) statusText.textContent = 'Not recording';
+        if (progress) progress.style.width = '0%';
+    }
     document.getElementById('startPerfTest').disabled = false;
     
     // Show comparison if we have baseline data
@@ -266,3 +275,5 @@ export function removePerfTestUI() {
     const ui = document.getElementById('perfTestUI');
     if (ui) ui.remove();
 }
+
+// Layout sizing is handled by CSS grid (grid-template-columns: max-content max-content)
