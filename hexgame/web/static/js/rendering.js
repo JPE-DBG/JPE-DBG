@@ -99,6 +99,14 @@ export function drawGrid(ctx, canvas) {
     // Draw dynamic elements (units, buildings, move range) directly on main canvas
     drawDynamicElements(ctx, canvas);
     
+    // Draw attack highlights if unit selected
+    if (state.selectedTile && state.gameState.units) {
+        const selectedUnit = state.gameState.units.find(u => u.col === state.selectedTile.col && u.row === state.selectedTile.row);
+        if (selectedUnit && !selectedUnit.moved && selectedUnit.owner === state.gameState.currentPlayer) {
+            drawAttackHighlights(ctx, canvas, selectedUnit);
+        }
+    }
+    
     // End performance monitoring
     perfMeasurement.monitorFrameEnd();
     
@@ -377,17 +385,6 @@ export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ti
     const unitTier = tier || 1; // Default to 1 if undefined
     const scale = 0.8 + unitTier * 0.2; // Larger for higher tiers
     const drawSize = size * scale;
-    ctx.beginPath();
-    if (unitType === 'ship') {
-        // Draw ship as triangle
-        ctx.moveTo(x, y - drawSize/3);
-        ctx.lineTo(x - drawSize/3, y + drawSize/3);
-        ctx.lineTo(x + drawSize/3, y + drawSize/3);
-        ctx.closePath();
-    } else {
-        // Draw troop as circle
-        ctx.arc(x, y, drawSize/3, 0, 2*Math.PI);
-    }
     
     // Get player color
     let playerColor = '#888';
@@ -406,38 +403,129 @@ export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ti
     } else {
         unitColor = playerColor; // Player color for other players
     }
-    ctx.fillStyle = unitColor;
     
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
+    ctx.fillStyle = unitColor;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    
+    if (unitType === 'ship') {
+        // Draw ship as a boat shape
+        ctx.beginPath();
+        ctx.moveTo(x - drawSize/2, y + drawSize/3);
+        ctx.lineTo(x + drawSize/2, y + drawSize/3);
+        ctx.lineTo(x + drawSize/3, y - drawSize/3);
+        ctx.lineTo(x - drawSize/3, y - drawSize/3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+        // Mast
+        ctx.beginPath();
+        ctx.moveTo(x, y - drawSize/3);
+        ctx.lineTo(x, y - drawSize);
+        ctx.stroke();
+        
+        // Sail
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(x, y - drawSize/3);
+        ctx.lineTo(x + drawSize/4, y - drawSize/2);
+        ctx.lineTo(x, y - drawSize);
+        ctx.closePath();
+        ctx.fill();
+        
+    } else {
+        // Draw troop as a soldier shape
+        ctx.beginPath();
+        ctx.arc(x, y - drawSize/4, drawSize/4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Body
+        ctx.beginPath();
+        ctx.rect(x - drawSize/6, y - drawSize/4, drawSize/3, drawSize/2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Legs
+        ctx.beginPath();
+        ctx.moveTo(x - drawSize/6, y + drawSize/4);
+        ctx.lineTo(x - drawSize/4, y + drawSize/2);
+        ctx.moveTo(x + drawSize/6, y + drawSize/4);
+        ctx.lineTo(x + drawSize/4, y + drawSize/2);
+        ctx.stroke();
+    }
 }
 
 export function drawBuilding(x, y, size, buildingType, owner, level, ctx) {
     const buildingLevel = level || 1; // Default to 1 if undefined
     const scale = 0.8 + buildingLevel * 0.2;
     const drawSize = size * scale;
-    ctx.beginPath();
     
-    // Draw building as a hexagon
-    for (let i = 0; i < 6; i++) {
-        const px = x + drawSize * hexPoints[i].x;
-        const py = y + drawSize * hexPoints[i].y;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-    }
-    
-    ctx.closePath();
-    
-    // Get owner color
-    let ownerColor = '#888';
+    // Get player color
+    let playerColor = '#3949ab';
     if (state.gameState.players) {
         const player = state.gameState.players.find(p => p.id === owner);
-        if (player) ownerColor = player.color;
+        if (player) playerColor = player.color;
     }
     
-    ctx.fillStyle = ownerColor;
-    ctx.fill();
+    ctx.fillStyle = playerColor;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    
+    if (buildingType === 'city') {
+        // Draw city as a castle
+        ctx.beginPath();
+        ctx.rect(x - drawSize/2, y - drawSize/4, drawSize, drawSize/2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Towers
+        ctx.beginPath();
+        ctx.rect(x - drawSize/2 - drawSize/6, y - drawSize/2, drawSize/6, drawSize/4);
+        ctx.rect(x + drawSize/2, y - drawSize/2, drawSize/6, drawSize/4);
+        ctx.fill();
+        ctx.stroke();
+        
+    } else if (buildingType === 'port') {
+        // Draw port as a dock
+        ctx.beginPath();
+        ctx.rect(x - drawSize/2, y - drawSize/4, drawSize, drawSize/4);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Pier
+        ctx.beginPath();
+        ctx.moveTo(x - drawSize/2, y);
+        ctx.lineTo(x + drawSize/2, y);
+        ctx.lineTo(x + drawSize/3, y + drawSize/4);
+        ctx.lineTo(x - drawSize/3, y + drawSize/4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+    } else if (buildingType === 'fort') {
+        // Draw fort as a fortress
+        ctx.beginPath();
+        ctx.rect(x - drawSize/2, y - drawSize/4, drawSize, drawSize/4);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Walls
+        ctx.beginPath();
+        ctx.moveTo(x - drawSize/2, y - drawSize/4);
+        ctx.lineTo(x - drawSize/2, y - drawSize/2);
+        ctx.lineTo(x + drawSize/2, y - drawSize/2);
+        ctx.lineTo(x + drawSize/2, y - drawSize/4);
+        ctx.stroke();
+        
+        // Turrets
+        ctx.beginPath();
+        ctx.arc(x - drawSize/3, y - drawSize/2, drawSize/8, 0, Math.PI * 2);
+        ctx.arc(x + drawSize/3, y - drawSize/2, drawSize/8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
     
     // Draw level indicator
     ctx.fillStyle = '#fff';
@@ -445,10 +533,6 @@ export function drawBuilding(x, y, size, buildingType, owner, level, ctx) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`L${buildingLevel}`, x, y);
-    
-    ctx.strokeStyle = '#222';
-    ctx.lineWidth = 2;
-    ctx.stroke();
 }
 
 // Force a complete redraw by clearing caches and offscreen canvas
@@ -465,4 +549,51 @@ export function invalidateDrawCache() {
     } catch (e) {
         // Ignore errors
     }
+}
+
+function drawAttackHighlights(ctx, canvas, selectedUnit) {
+    const hexSize = 30 * state.zoom;
+    const hexHeight = Math.sqrt(3) * hexSize;
+    const margin = hexHeight;
+    
+    // Get attack range (same as move range for now)
+    const attackRange = state.moveRange;
+    
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#ff0000';
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 3;
+    
+    // Highlight enemy units in range
+    for (const unit of state.gameState.units) {
+        if (unit.owner !== selectedUnit.owner) {
+            const inRange = attackRange.some(t => t.col === unit.col && t.row === unit.row);
+            if (inRange) {
+                let x = hexSize * 1.5 * unit.col + state.offsetX + margin;
+                let y = hexHeight * unit.row + state.offsetY + margin;
+                if (unit.col % 2 !== 0) y += hexHeight / 2;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, hexSize / 2, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+    }
+    
+    // Highlight enemy buildings in range
+    for (const building of state.gameState.buildings) {
+        if (building.owner !== selectedUnit.owner) {
+            const inRange = attackRange.some(t => t.col === building.col && t.row === building.row);
+            if (inRange) {
+                let x = hexSize * 1.5 * building.col + state.offsetX + margin;
+                let y = hexHeight * building.row + state.offsetY + margin;
+                if (building.col % 2 !== 0) y += hexHeight / 2;
+                
+                ctx.strokeRect(x - hexSize/3, y - hexSize/3, hexSize*2/3, hexSize*2/3);
+            }
+        }
+    }
+    
+    ctx.restore();
 }

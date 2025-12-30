@@ -143,3 +143,43 @@ func getMoveRange(col, row, rng int, unitType string) [][2]int {
 	}
 	return result
 }
+
+type UnitStats struct {
+	Health  int
+	Attack  int
+	Defense int
+}
+
+type UnitConfig struct {
+	CostGold     int
+	CostWood     int
+	CostIron     int
+	CostResearch int
+	Stats        UnitStats
+}
+
+type BuildingConfig struct {
+	CostGold       int
+	CostWood       int
+	CostIron       int
+	ProductionGold int
+	ProductionWood int
+	ProductionIron int
+}
+
+var UnitConfigs = map[string]map[int]UnitConfig{
+	"troop": {
+		1: {CostGold: 10, CostWood: 0, CostIron: 0, CostResearch: 0, Stats: UnitStats{Health: 5, Attack: 2, Defense: 1}},
+		2: {CostGold: 20, CostWood: 0, CostIron: 5, CostResearch: 50, Stats: UnitStats{Health: 8, Attack: 4, Defense: 2}},
+	},
+	"ship": {
+		1: {CostGold: 0, CostWood: 20, CostIron: 0, CostResearch: 0, Stats: UnitStats{Health: 10, Attack: 3, Defense: 2}},
+		2: {CostGold: 0, CostWood: 40, CostIron: 10, CostResearch: 50, Stats: UnitStats{Health: 15, Attack: 5, Defense: 3}},
+	},
+}
+
+var BuildingConfigs = map[string]BuildingConfig{
+	"city": {CostGold: 50, CostWood: 0, CostIron: 0, ProductionGold: 10, ProductionWood: 0, ProductionIron: 0},
+	"port": {CostGold: 30, CostWood: 10, CostIron: 0, ProductionGold: 0, ProductionWood: 5, ProductionIron: 0},
+	"fort": {CostGold: 40, CostWood: 0, CostIron: 5, ProductionGold: 0, ProductionWood: 0, ProductionIron: 3},
+}

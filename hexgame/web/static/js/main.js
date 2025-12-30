@@ -11,14 +11,27 @@ function scheduleDrawGrid() {
     requestAnimationFrame(() => drawGrid(ctx, canvas));
 }
 
+// Start animation loop for blinking
+function startAnimationLoop() {
+    function animate() {
+        scheduleDrawGrid();
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
 // Expose the draw function globally so performance testing can access it
 window.scheduleDrawGrid = scheduleDrawGrid;
 
 function resizeCanvas(skipDraw = false) {
-    const bar = document.getElementById('bottom-bar');
-    const barRect = bar ? bar.getBoundingClientRect() : { height: 56, top: window.innerHeight - 56 };
+    const topHeader = document.getElementById('top-header');
+    const bottomBar = document.getElementById('bottom-bar');
+    
+    const topHeight = topHeader ? topHeader.offsetHeight : 40;
+    const bottomHeight = bottomBar ? bottomBar.offsetHeight : 56;
+    
     canvas.width = window.innerWidth;
-    canvas.height = bar ? barRect.top : (window.innerHeight - barRect.height);
+    canvas.height = window.innerHeight - topHeight - bottomHeight;
 
     if (!skipDraw) scheduleDrawGrid();
 }
@@ -70,9 +83,80 @@ async function initGame() {
     
     // Initialize the performance testing UI
     perfTestUI.createPerfTestUI();
+
+    // Start animation loop
+    startAnimationLoop();
+}
+
+// Player identification
+window.currentPlayerId = null;
+
+function showPlayerSetup() {
+    document.getElementById('player-setup').style.display = 'block';
+}
+
+function hidePlayerSetup() {
+    document.getElementById('player-setup').style.display = 'none';
+}
+
+function setupPlayerSelection() {
+    document.getElementById('joinPlayer1').addEventListener('click', async () => {
+        const name = document.getElementById('playerName').value || 'Player 1';
+        window.currentPlayerId = 1;
+        updatePlayerDisplay(name, 1);
+        hidePlayerSetup();
+        
+        // Send join request to server
+        await fetch('/api/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ playerId: 1, name: name })
+        });
+        
+        initGame();
+    });
+    
+    document.getElementById('joinPlayer2').addEventListener('click', async () => {
+        const name = document.getElementById('playerName').value || 'Player 2';
+        window.currentPlayerId = 2;
+        updatePlayerDisplay(name, 2);
+        hidePlayerSetup();
+        
+        // Send join request to server
+        await fetch('/api/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ playerId: 2, name: name })
+        });
+        
+        initGame();
+    });
+}
+
+function updatePlayerDisplay(name, playerId) {
+    const playerInfo = document.getElementById('playerInfo');
+    const resourcesInfo = document.getElementById('resourcesInfo');
+    const playerNameDisplay = document.getElementById('player-name-display');
+    
+    if (playerInfo) {
+        playerInfo.textContent = `You are ${name} (Player ${playerId})`;
+    }
+    if (resourcesInfo) {
+        resourcesInfo.id = `resourcesInfo-${playerId}`;
+    }
+    if (playerNameDisplay) {
+        playerNameDisplay.textContent = `${name} (Player ${playerId})`;
+        playerNameDisplay.style.color = playerId === 1 ? '#ff0000' : '#0000ff'; // Player colors
+    }
+    
+    // Keep original tab title
+    document.title = 'Hex Island Conquest';
 }
 
 // Set up game
 setupInputHandlers(canvas, ctx, scheduleDrawGrid);
+setupPlayerSelection();
 window.addEventListener('resize', () => resizeCanvas(false));
-initGame();
+
+// Show player setup instead of starting game immediately
+showPlayerSetup();

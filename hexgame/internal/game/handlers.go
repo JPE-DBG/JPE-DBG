@@ -125,11 +125,14 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if hasPort && (gameState.Tiles[req.ToCol][req.ToRow].Type == "land" || gameState.Tiles[req.ToCol][req.ToRow].Type == "water") && !unitAt(req.ToCol, req.ToRow) {
-			// Check cost: 20 wood
+			config := UnitConfigs["ship"][1]
+			// Check cost
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Wood >= 20 {
-					gameState.Players[i].Wood -= 20
-					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "ship", Tier: 1, Health: 10, Attack: 3, Defense: 2})
+				if p.ID == gameState.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
+					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "ship", Tier: 1, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
 					break
 				}
 			}
@@ -144,21 +147,27 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if hasCity && gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) {
-			// Check cost: 10 gold
+			config := UnitConfigs["troop"][1]
+			// Check cost
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Gold >= 10 {
-					gameState.Players[i].Gold -= 10
-					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "troop", Tier: 1, Health: 5, Attack: 2, Defense: 1})
+				if p.ID == gameState.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
+					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "troop", Tier: 1, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
 					break
 				}
 			}
 		}
 	} else if req.Type == "place_city" {
 		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
-			// Check cost: 50 gold
+			config := BuildingConfigs["city"]
+			// Check cost
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Gold >= 50 {
-					gameState.Players[i].Gold -= 50
+				if p.ID == gameState.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
 					gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1, Type: "city"})
 					break
 				}
@@ -166,11 +175,13 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if req.Type == "place_port" {
 		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
-			// Check cost: 30 gold, 10 wood
+			config := BuildingConfigs["port"]
+			// Check cost
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Gold >= 30 && p.Wood >= 10 {
-					gameState.Players[i].Gold -= 30
-					gameState.Players[i].Wood -= 10
+				if p.ID == gameState.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
 					gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1, Type: "port"})
 					break
 				}
@@ -178,11 +189,13 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if req.Type == "place_fort" {
 		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
-			// Check cost: 40 gold, 5 iron
+			config := BuildingConfigs["fort"]
+			// Check cost
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Gold >= 40 && p.Iron >= 5 {
-					gameState.Players[i].Gold -= 40
-					gameState.Players[i].Iron -= 5
+				if p.ID == gameState.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
 					gameState.Buildings = append(gameState.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: gameState.CurrentPlayer, Level: 1, Type: "fort"})
 					break
 				}
@@ -246,11 +259,13 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if hasPort && (gameState.Tiles[req.ToCol][req.ToRow].Type == "land" || gameState.Tiles[req.ToCol][req.ToRow].Type == "water") && !unitAt(req.ToCol, req.ToRow) {
+			config := UnitConfigs["ship"][2]
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Research >= 50 && p.Wood >= 40 && p.Iron >= 10 {
-					gameState.Players[i].Wood -= 40
-					gameState.Players[i].Iron -= 10
-					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "ship", Tier: 2, Health: 15, Attack: 5, Defense: 3})
+				if p.ID == gameState.CurrentPlayer && p.Research >= config.CostResearch && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
+					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "ship", Tier: 2, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
 					break
 				}
 			}
@@ -264,12 +279,14 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if hasCity && gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) {
+			config := UnitConfigs["troop"][2]
 			// Check research >= 50, cost 20 gold, 5 iron
 			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer && p.Research >= 50 && p.Gold >= 20 && p.Iron >= 5 {
-					gameState.Players[i].Gold -= 20
-					gameState.Players[i].Iron -= 5
-					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "troop", Tier: 2, Health: 8, Attack: 4, Defense: 2})
+				if p.ID == gameState.CurrentPlayer && p.Research >= config.CostResearch && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+					gameState.Players[i].Gold -= config.CostGold
+					gameState.Players[i].Wood -= config.CostWood
+					gameState.Players[i].Iron -= config.CostIron
+					gameState.Units = append(gameState.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: gameState.CurrentPlayer, Type: "troop", Tier: 2, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
 					break
 				}
 			}
@@ -297,22 +314,14 @@ func EndTurnHandler(w http.ResponseWriter, r *http.Request) {
 		if p.ID == gameState.CurrentPlayer {
 			for _, b := range gameState.Buildings {
 				if b.Owner == p.ID {
-					if b.Type == "city" {
-						gameState.Players[i].Gold += 10
-					} else if b.Type == "port" {
-						gameState.Players[i].Wood += 5
-					} else if b.Type == "fort" {
-						gameState.Players[i].Iron += 3
-					}
+					config := BuildingConfigs[b.Type]
+					gameState.Players[i].Gold += config.ProductionGold
+					gameState.Players[i].Wood += config.ProductionWood
+					gameState.Players[i].Iron += config.ProductionIron
 				}
 			}
 			// Produce research
-			for i, p := range gameState.Players {
-				if p.ID == gameState.CurrentPlayer {
-					gameState.Players[i].Research += 5 // 5 research per turn
-					break
-				}
-			}
+			gameState.Players[i].Research += 5 // 5 research per turn
 			break
 		}
 	}
@@ -388,4 +397,37 @@ func init() {
 			}
 		}
 	}()
+}
+
+func JoinHandler(w http.ResponseWriter, r *http.Request) {
+	if gameState == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	type JoinRequest struct {
+		PlayerID int    `json:"playerId"`
+		Name     string `json:"name"`
+	}
+
+	var req JoinRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Update player name
+	for i, p := range gameState.Players {
+		if p.ID == req.PlayerID {
+			gameState.Players[i].Name = req.Name
+			break
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(gameState)
+	select {
+	case broadcast <- gameState:
+	default:
+	}
 }

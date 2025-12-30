@@ -1,3 +1,6 @@
+import * as state from './state.js';
+import * as perfMeasurement from './perfMeasurement.js';
+
 // --- State management for game, map, and UI ---
 export let ROWS = 0, COLS = 0;
 export let mapState = [];
@@ -147,11 +150,16 @@ export async function fetchGame(draw = true, scheduleDrawGrid) {
     if (turnInfo) turnInfo.textContent = `Turn: ${gameState.turn}`;
     if (playerInfo && gameState.players) {
         const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
-        if (currentPlayer) playerInfo.textContent = `Player: ${currentPlayer.name}`;
+        if (currentPlayer) {
+            const isCurrentUser = currentPlayer.id === window.currentPlayerId;
+            playerInfo.textContent = `${isCurrentUser ? 'Your' : currentPlayer.name + "'s"} turn (Player ${currentPlayer.id})`;
+        }
     }
-    if (resourcesInfo && gameState.players) {
-        const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
-        if (currentPlayer) resourcesInfo.textContent = `Gold: ${currentPlayer.gold} Wood: ${currentPlayer.wood} Iron: ${currentPlayer.iron} Research: ${currentPlayer.research}`;
+    if (resourcesInfo && gameState.players && window.currentPlayerId) {
+        const myPlayer = gameState.players.find(p => p.id === window.currentPlayerId);
+        if (myPlayer) {
+            resourcesInfo.textContent = `Gold: ${myPlayer.gold} Wood: ${myPlayer.wood} Iron: ${myPlayer.iron} Research: ${myPlayer.research}`;
+        }
     }
 
     // Clear caches when map changes

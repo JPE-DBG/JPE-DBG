@@ -6,6 +6,9 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <div id="top-header">
+        <div id="player-name-display"></div>
+    </div>
     <canvas id="hexCanvas"></canvas>
     <div id="bottom-bar">
         <div class="left-info">
@@ -14,13 +17,13 @@
             <span id="resourcesInfo">Gold: 0 Wood: 0 Iron: 0 Research: 0</span>
         </div>
         <div class="center-btns">
-            <button class="icon-btn" data-type="troop">Troop</button>
-            <button class="icon-btn" data-type="ship">Ship</button>
-            <button class="icon-btn" data-type="advanced_troop">Adv Troop</button>
-            <button class="icon-btn" data-type="advanced_ship">Adv Ship</button>
-            <button class="icon-btn" data-type="city">City</button>
-            <button class="icon-btn" data-type="port">Port</button>
-            <button class="icon-btn" data-type="fort">Fort</button>
+            <button class="icon-btn" data-type="troop" title="Troop: 10 Gold">Troop</button>
+            <button class="icon-btn" data-type="ship" title="Ship: 20 Wood">Ship</button>
+            <button class="icon-btn" data-type="advanced_troop" title="Adv Troop: 20 Gold, 5 Iron, 50 Research">Adv Troop</button>
+            <button class="icon-btn" data-type="advanced_ship" title="Adv Ship: 40 Wood, 10 Iron, 50 Research">Adv Ship</button>
+            <button class="icon-btn" data-type="city" title="City: 50 Gold">City</button>
+            <button class="icon-btn" data-type="port" title="Port: 30 Gold, 10 Wood">Port</button>
+            <button class="icon-btn" data-type="fort" title="Fort: 40 Gold, 5 Iron">Fort</button>
             <button id="nextTurnBtn">Next Turn</button>
         </div>
         <div class="right-controls">
@@ -35,6 +38,16 @@
                 </div>
             </div>
             <button id="regenMapBtn">Regenerate Map</button>
+        </div>
+    </div>
+    <div id="player-setup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border: 2px solid #444; z-index: 1000;">
+        <h3>Choose Your Player</h3>
+        <div>
+            <label>Player Name: <input type="text" id="playerName" placeholder="Enter your name"></label>
+        </div>
+        <div>
+            <button id="joinPlayer1">Join as Player 1</button>
+            <button id="joinPlayer2">Join as Player 2</button>
         </div>
     </div>
     <script type="module" src="js/main.js"></script>
