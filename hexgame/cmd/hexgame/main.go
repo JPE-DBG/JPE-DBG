@@ -5,6 +5,7 @@ import (
 	"hexgame/internal/game"
 	"log"
 	"net/http"
+	"path/filepath"
 )
 
 func main() {
@@ -26,7 +27,9 @@ func main() {
 	// Set initial map size
 	game.SetInitialMapSize(*cols, *rows)
 
-	fs := http.FileServer(http.Dir("../../web/static"))
+	staticDir := filepath.Join(".", "web", "static")
+	fs := http.FileServer(http.Dir(staticDir))
+
 	http.Handle("/", fs)
 	http.HandleFunc("/api/map", game.MapHandler)
 	http.HandleFunc("/api/game", game.GameHandler)

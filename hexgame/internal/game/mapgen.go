@@ -125,7 +125,7 @@ func generateMapV2(cols, rows int) [][]Tile {
 // generateMapV3 creates a connected continent, no  mask, and no random void holes.
 func generateMapV3(cols, rows int) [][]Tile {
 	const minLandRatio = 0.20
-	maxAttempts := 15
+	maxAttempts := 30
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		tiles := make([][]Tile, cols)
 		for x := 0; x < cols; x++ {

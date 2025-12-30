@@ -80,6 +80,7 @@ export function createPerfTestUI() {
 // Set state management functions needed for auto-scrolling
 export function setStateFunctions(stateData) {
     stateSetters = stateData;
+    window.stateSetters = stateData;  // Also set on window for access by perfMeasurement functions
     console.log("State functions registered for auto-testing:", 
         Object.keys(stateData).filter(key => stateData[key] !== undefined));
 }
@@ -182,6 +183,16 @@ function stopPerfTrackingSession() {
     // Show comparison if we have baseline data
     showComparison();
 }
+
+// Function to update results display (called when auto-test completes)
+function updatePerfResultsDisplay() {
+    const results = perfMeasurement.formatPerfResults(perfMeasurement.scrollMetrics);
+    document.getElementById('perfResults').textContent = results;
+    document.getElementById('startPerfTest').disabled = false;
+}
+
+// Expose the update function globally for perfMeasurement to call
+window.updatePerfResultsDisplay = updatePerfResultsDisplay;
 
 // Save current results as baseline
 function saveBaselineResults() {
