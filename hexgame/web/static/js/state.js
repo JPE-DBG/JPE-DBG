@@ -54,9 +54,51 @@ export function setOffset(x, y) {
 export function setPanning(pan) { isPanning = pan; }
 export function setPanStart(obj) { panStart = obj; }
 export function setMapData(data) { mapData = data; }
-export function setGameState(state) { gameState = state; }
+export function setGameState(state) { 
+    gameState = state; 
+    COLS = gameState.cols;
+    ROWS = gameState.rows;
+    mapData = { tiles: gameState.tiles };
+    
+    // Update UI when game state changes
+    updateGameUI();
+    
+    // Clear caches when map changes
+    hexPositionCache.clear();
+    updateVisibleBounds();
+}
 export function setMapSize(cols, rows) { COLS = cols; ROWS = rows; }
 export function setMapCenteredOnce(val) { mapCenteredOnce = val; }
+
+// Update UI elements based on current game state
+function updateGameUI() {
+    if (!gameState) return;
+    
+    // Update UI input fields with current map size
+    const colsInput = document.getElementById('mapCols');
+    const rowsInput = document.getElementById('mapRows');
+    if (colsInput) colsInput.value = COLS;
+    if (rowsInput) rowsInput.value = ROWS;
+
+    // Update turn and player info
+    const turnInfo = document.getElementById('turnInfo');
+    const playerInfo = document.getElementById('playerInfo');
+    const resourcesInfo = document.getElementById('resourcesInfo');
+    if (turnInfo) turnInfo.textContent = `Turn: ${gameState.turn}`;
+    if (playerInfo && gameState.players) {
+        const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
+        if (currentPlayer) {
+            const isCurrentUser = currentPlayer.id === window.currentPlayerId;
+            playerInfo.textContent = `${isCurrentUser ? 'Your' : currentPlayer.name + "'s"} turn (Player ${currentPlayer.id})`;
+        }
+    }
+    if (resourcesInfo && gameState.players && window.currentPlayerId) {
+        const myPlayer = gameState.players.find(p => p.id === window.currentPlayerId);
+        if (myPlayer) {
+            resourcesInfo.textContent = `Gold: ${myPlayer.gold} Wood: ${myPlayer.wood} Iron: ${myPlayer.iron} Research: ${myPlayer.research}`;
+        }
+    }
+}
 
 // Get cached or calculate hex position
 export function getHexPosition(col, row) {
@@ -137,30 +179,8 @@ export async function fetchGame(draw = true, scheduleDrawGrid) {
     ROWS = gameState.rows;
     mapData = { tiles: gameState.tiles };
 
-    // Update UI input fields with current map size
-    const colsInput = document.getElementById('mapCols');
-    const rowsInput = document.getElementById('mapRows');
-    if (colsInput) colsInput.value = COLS;
-    if (rowsInput) rowsInput.value = ROWS;
-
-    // Update turn and player info
-    const turnInfo = document.getElementById('turnInfo');
-    const playerInfo = document.getElementById('playerInfo');
-    const resourcesInfo = document.getElementById('resourcesInfo');
-    if (turnInfo) turnInfo.textContent = `Turn: ${gameState.turn}`;
-    if (playerInfo && gameState.players) {
-        const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
-        if (currentPlayer) {
-            const isCurrentUser = currentPlayer.id === window.currentPlayerId;
-            playerInfo.textContent = `${isCurrentUser ? 'Your' : currentPlayer.name + "'s"} turn (Player ${currentPlayer.id})`;
-        }
-    }
-    if (resourcesInfo && gameState.players && window.currentPlayerId) {
-        const myPlayer = gameState.players.find(p => p.id === window.currentPlayerId);
-        if (myPlayer) {
-            resourcesInfo.textContent = `Gold: ${myPlayer.gold} Wood: ${myPlayer.wood} Iron: ${myPlayer.iron} Research: ${myPlayer.research}`;
-        }
-    }
+    // Update UI when game state changes
+    updateGameUI();
 
     // Clear caches when map changes
     hexPositionCache.clear();
