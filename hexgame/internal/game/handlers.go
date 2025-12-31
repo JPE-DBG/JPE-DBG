@@ -103,7 +103,7 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			if u.Col == req.FromCol && u.Row == req.FromRow && !u.Moved && u.Owner == gameState.CurrentPlayer {
 				valid := false
 				if u.Type == "ship" {
-					valid = (gameState.Tiles[req.ToCol][req.ToRow].Type == "land" || gameState.Tiles[req.ToCol][req.ToRow].Type == "water") && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow)
+					valid = gameState.Tiles[req.ToCol][req.ToRow].Type == "water" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow)
 				} else if u.Type == "troop" {
 					valid = gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow)
 				}
@@ -116,15 +116,18 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else if req.Type == "place_ship" {
-		// Check if there's a port at the position
-		hasPort := false
-		for _, b := range gameState.Buildings {
-			if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "port" && b.Owner == gameState.CurrentPlayer {
-				hasPort = true
-				break
+		// Check if there's a port at the position or if it's water
+		canPlaceShip := gameState.Tiles[req.ToCol][req.ToRow].Type == "water"
+		if !canPlaceShip {
+			// Check if there's a port at the position
+			for _, b := range gameState.Buildings {
+				if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "port" && b.Owner == gameState.CurrentPlayer {
+					canPlaceShip = true
+					break
+				}
 			}
 		}
-		if hasPort && (gameState.Tiles[req.ToCol][req.ToRow].Type == "land" || gameState.Tiles[req.ToCol][req.ToRow].Type == "water") && !unitAt(req.ToCol, req.ToRow) {
+		if canPlaceShip && !unitAt(req.ToCol, req.ToRow) {
 			config := UnitConfigs["ship"][1]
 			// Check cost
 			for i, p := range gameState.Players {
@@ -174,7 +177,7 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else if req.Type == "place_port" {
-		if gameState.Tiles[req.ToCol][req.ToRow].Type == "land" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
+		if gameState.Tiles[req.ToCol][req.ToRow].Type == "water" && !unitAt(req.ToCol, req.ToRow) && !buildingAt(req.ToCol, req.ToRow) {
 			config := BuildingConfigs["port"]
 			// Check cost
 			for i, p := range gameState.Players {
@@ -202,6 +205,7 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else if req.Type == "attack" {
+		log.Printf("Processing attack from (%d,%d) to (%d,%d)", req.FromCol, req.FromRow, req.ToCol, req.ToRow)
 		// Attack unit or building at target
 		var attacker *Unit
 		attackerIndex := -1
@@ -213,6 +217,7 @@ func MoveHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if attacker != nil {
+			log.Printf("Attacker found: %s with %d attack", attacker.Type, attacker.Attack)
 			// Check if attacking unit
 			for i, u := range gameState.Units {
 				if u.Col == req.ToCol && u.Row == req.ToRow && u.Owner != gameState.CurrentPlayer {

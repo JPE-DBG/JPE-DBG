@@ -267,10 +267,40 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                 state.setSelectedTile({col, row});
             }
             
-        } else if (state.selectedTile && (unit || building) && (unit && unit.owner !== state.gameState.currentPlayer || building && building.owner !== state.gameState.currentPlayer)) {
-            // Attack enemy unit or building
-            const inRange = state.moveRange.some(t => t.col === col && t.row === row);
-            if (inRange) {
+        } else {
+            // Clear selection
+            state.setSelectedTile(null);
+            state.setMoveRange([]);
+            scheduleDrawGrid();
+        }
+    });
+
+    // Right-click handler for attacks
+    canvas.addEventListener('contextmenu', async (e) => {
+        e.preventDefault(); // Prevent the default context menu
+        
+        if (!state.gameState || !state.selectedTile) {
+            return;
+        }
+        
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        
+        const tile = state.getHexAt(mx, my);
+        if (!tile) {
+            return;
+        }
+        
+        const { col, row } = tile;
+        const unit = state.gameState.units.find(u => u.col === col && u.row === row);
+        const building = state.gameState.buildings.find(b => b.col === col && b.row === row);
+        
+        // Check if there's an enemy unit or building to attack
+        if ((unit && unit.owner !== state.gameState.currentPlayer) || (building && building.owner !== state.gameState.currentPlayer)) {
+            // Check if the target is in range (attack range = 5, same as movement)
+            const distance = state.hexDistance(state.selectedTile.col, state.selectedTile.row, col, row);
+            if (distance <= 5) {
                 await fetch('/api/move', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -286,11 +316,6 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                 state.setSelectedTile(null);
                 state.setMoveRange([]);
             }
-        } else {
-            // Clear selection
-            state.setSelectedTile(null);
-            state.setMoveRange([]);
-            scheduleDrawGrid();
         }
     });
 }

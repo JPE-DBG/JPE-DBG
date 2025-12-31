@@ -1,8 +1,8 @@
 package game
 
 var (
-	MapCols = 500
-	MapRows = 500
+	MapCols = 50
+	MapRows = 50
 )
 
 // SetInitialMapSize sets the initial map dimensions

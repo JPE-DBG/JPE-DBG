@@ -243,3 +243,11 @@ export function pointInHex(mx, my, cx, cy, size) {
     const distSquared = dx * dx + dy * dy;
     return distSquared <= size * size;
 }
+
+// Calculate hex distance between two tiles
+export function hexDistance(col1, row1, col2, row2) {
+    const dx = col2 - col1;
+    const dy = row2 - row1;
+    // For hex grid with even rows offset, distance is max(|dx|, |dy|, |dx + dy|)
+    return Math.max(Math.abs(dx), Math.abs(dy), Math.abs(dx + dy));
+}
