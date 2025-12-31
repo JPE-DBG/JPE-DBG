@@ -430,7 +430,7 @@ func JoinHandler(w http.ResponseWriter, r *http.Request) {
 		ID:       nextPlayerID,
 		Name:     req.Name,
 		Color:    getPlayerColor(nextPlayerID),
-		Capital:  getPlayerCapital(nextPlayerID, gameState.Cols, gameState.Rows),
+		Capital:  getPlayerCapital(nextPlayerID, gameState.Cols, gameState.Rows, gameState),
 		Gold:     100,
 		Wood:     50,
 		Iron:     20,
@@ -446,15 +446,16 @@ func JoinHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create initial city and unit for the new player at their capital
 	c := newPlayer.Capital
-	if gameState.Tiles[c[0]][c[1]].Type == "land" && !unitAt(c[0], c[1]) && !buildingAt(c[0], c[1]) {
-		gameState.Buildings = append(gameState.Buildings, Building{
-			Col: c[0], Row: c[1], Owner: nextPlayerID, Level: 1, Type: "city",
-		})
-		gameState.Units = append(gameState.Units, Unit{
-			Col: c[0], Row: c[1], Moved: false, Owner: nextPlayerID,
-			Type: "troop", Tier: 1, Health: 5, Attack: 2, Defense: 1,
-		})
-	}
+	log.Printf("Creating capital for player %d at coordinates [%d,%d]", nextPlayerID, c[0], c[1])
+
+	// The capital position is already guaranteed to be valid land
+	gameState.Buildings = append(gameState.Buildings, Building{
+		Col: c[0], Row: c[1], Owner: nextPlayerID, Level: 1, Type: "city",
+	})
+	gameState.Units = append(gameState.Units, Unit{
+		Col: c[0], Row: c[1], Moved: false, Owner: nextPlayerID,
+		Type: "troop", Tier: 1, Health: 5, Attack: 2, Defense: 1,
+	})
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -474,17 +475,77 @@ func getPlayerColor(playerID int) string {
 	return colors[(playerID-1)%len(colors)]
 }
 
-func getPlayerCapital(playerID int, cols, rows int) [2]int {
-	// Distribute players around the map corners
-	corners := [][2]int{
-		{cols / 4, rows / 4},         // Top-left
-		{3 * cols / 4, rows / 4},     // Top-right
-		{cols / 4, 3 * rows / 4},     // Bottom-left
-		{3 * cols / 4, 3 * rows / 4}, // Bottom-right
-		{cols / 2, rows / 4},         // Top-center
-		{cols / 2, 3 * rows / 4},     // Bottom-center
-		{cols / 4, rows / 2},         // Left-center
-		{3 * cols / 4, rows / 2},     // Right-center
+func getPlayerCapital(playerID int, cols, rows int, gameState *GameState) [2]int {
+	// Scan the map for available land positions and choose one based on player ID
+	var landPositions [][2]int
+
+	// Scan the entire map for land tiles that don't have buildings or units
+	for col := 0; col < cols; col++ {
+		for row := 0; row < rows; row++ {
+			if gameState.Tiles[col][row].Type == "land" && !unitAt(col, row) && !buildingAt(col, row) {
+				landPositions = append(landPositions, [2]int{col, row})
+			}
+		}
 	}
-	return corners[(playerID-1)%len(corners)]
+
+	if len(landPositions) == 0 {
+		log.Printf("No land positions available for player %d capital!", playerID)
+		return [2]int{0, 0} // fallback
+	}
+
+	// Choose positions within preferred quadrants but avoid edges/corners
+	var preferredPositions [][2]int
+	margin := cols / 8 // Avoid positions too close to edges
+
+	switch playerID % 4 {
+	case 1: // Top-left quadrant, but not too close to edges
+		for _, pos := range landPositions {
+			if pos[0] > margin && pos[0] < cols/2-margin && pos[1] > margin && pos[1] < rows/2-margin {
+				preferredPositions = append(preferredPositions, pos)
+			}
+		}
+	case 2: // Top-right quadrant, but not too close to edges
+		for _, pos := range landPositions {
+			if pos[0] > cols/2+margin && pos[0] < cols-margin && pos[1] > margin && pos[1] < rows/2-margin {
+				preferredPositions = append(preferredPositions, pos)
+			}
+		}
+	case 3: // Bottom-left quadrant, but not too close to edges
+		for _, pos := range landPositions {
+			if pos[0] > margin && pos[0] < cols/2-margin && pos[1] > rows/2+margin && pos[1] < rows-margin {
+				preferredPositions = append(preferredPositions, pos)
+			}
+		}
+	case 0: // Bottom-right quadrant, but not too close to edges
+		for _, pos := range landPositions {
+			if pos[0] > cols/2+margin && pos[0] < cols-margin && pos[1] > rows/2+margin && pos[1] < rows-margin {
+				preferredPositions = append(preferredPositions, pos)
+			}
+		}
+	}
+
+	// If we found positions in the preferred quadrant, choose one
+	if len(preferredPositions) > 0 {
+		// Use player ID to select different positions within the quadrant
+		// This distributes players more naturally
+		index := (playerID - 1) * 7 % len(preferredPositions) // Multiply by prime for better distribution
+		return preferredPositions[index]
+	}
+
+	// Fallback: use any available land position, avoiding edges
+	var safePositions [][2]int
+	for _, pos := range landPositions {
+		if pos[0] > margin && pos[0] < cols-margin && pos[1] > margin && pos[1] < rows-margin {
+			safePositions = append(safePositions, pos)
+		}
+	}
+
+	if len(safePositions) > 0 {
+		index := (playerID - 1) % len(safePositions)
+		return safePositions[index]
+	}
+
+	// Ultimate fallback: use any available land position
+	index := (playerID - 1) % len(landPositions)
+	return landPositions[index]
 }

@@ -129,7 +129,14 @@ function setupPlayerSelection() {
             
             // Do the post-join setup without fetching game state again
             resizeCanvas(true); // Skip draw, but sets canvas size
-            centerMapView();
+            
+            // Center the view on the player's capital
+            if (data.capital) {
+                centerOnCapital(data.capital[0], data.capital[1]);
+            } else {
+                centerMapView(); // fallback
+            }
+            
             state.setMapCenteredOnce(true);
             
             // Connect to WebSocket
@@ -162,6 +169,23 @@ function updatePlayerDisplay(name, playerId, playerColor) {
     
     // Keep original tab title
     document.title = 'Hex Island Conquest';
+}
+
+// Center the map view on the player's capital coordinates
+function centerOnCapital(capitalCol, capitalRow) {
+    const hexSize = 30 * state.zoom;
+    const hexHeight = Math.sqrt(3) * hexSize;
+    const margin = 20;
+    
+    // Calculate the pixel position of the capital
+    let capitalX = hexSize * 1.5 * capitalCol + margin;
+    let capitalY = hexHeight * capitalRow + margin;
+    if (capitalCol % 2 !== 0) capitalY += hexHeight / 2;
+    
+    // Center the view on the capital
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
+    state.setOffset(canvasCenterX - capitalX, canvasCenterY - capitalY);
 }
 
 // Set up game
