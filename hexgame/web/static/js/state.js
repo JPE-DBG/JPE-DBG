@@ -226,9 +226,7 @@ export function getHexAt(mx, my) {
             
             const pos = getHexPosition(col, row);
             if (pointInHex(mx, my, pos.x, pos.y, hexSize)) {
-                // Make sure tile exists and is land before returning
-                if (gameState.tiles[col][row].type === 'land') return {col, row};
-                return null;
+                return {col, row};
             }
         }
     }
