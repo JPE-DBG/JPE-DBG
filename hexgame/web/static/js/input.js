@@ -152,7 +152,8 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                         fromCol: state.selectedTile.col,
                         fromRow: state.selectedTile.row,
                         toCol: col,
-                        toRow: row
+                        toRow: row,
+                        playerId: window.currentPlayerId
                     })
                 });
                 debouncedGameUpdate();
@@ -183,7 +184,11 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
 
     document.getElementById('nextTurnBtn')?.addEventListener('click', async () => {
         try {
-            await fetch('/api/endturn', { method: 'POST' });
+            await fetch('/api/endturn', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId: window.currentPlayerId })
+            });
             debouncedGameUpdate();
         } catch (error) {
             console.error('Error ending turn:', error);
@@ -307,7 +312,7 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                     await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type, toCol: col, toRow: row })
+                        body: JSON.stringify({ type, toCol: col, toRow: row, playerId: window.currentPlayerId })
                     });
                     // Update game state and clear selection
                     state.setSelectedBarType(null);
@@ -326,7 +331,7 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                     const res = await fetch('/api/move-range', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ col, row, range: 5, unitType: unit.type })
+                        body: JSON.stringify({ col, row, range: 5, unitType: unit.type, playerId: window.currentPlayerId })
                     });
                     const data = await res.json();
                     state.setMoveRange(data.tiles.map(([c, r]) => ({col: c, row: r})));
@@ -352,7 +357,8 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
                             fromCol: state.selectedTile.col,
                             fromRow: state.selectedTile.row,
                             toCol: col,
-                            toRow: row
+                            toRow: row,
+                            playerId: window.currentPlayerId
                         })
                     });
                     debouncedGameUpdate();

@@ -21,11 +21,12 @@ type MapResponse struct {
 }
 
 type MoveRequest struct {
-	Type    string `json:"type"` // "move", "place_ship", "place_troop", "place_city", "place_port", "place_fort", "attack"
-	FromCol int    `json:"fromCol,omitempty"`
-	FromRow int    `json:"fromRow,omitempty"`
-	ToCol   int    `json:"toCol"`
-	ToRow   int    `json:"toRow"`
+	Type     string `json:"type"` // "move", "place_ship", "place_troop", "place_city", "place_port", "place_fort", "attack"
+	FromCol  int    `json:"fromCol,omitempty"`
+	FromRow  int    `json:"fromRow,omitempty"`
+	ToCol    int    `json:"toCol"`
+	ToRow    int    `json:"toRow"`
+	PlayerID int    `json:"playerId"`
 }
 
 type Game interface {
@@ -325,6 +326,15 @@ func (g *GameImpl) unitAt(col, row int) bool {
 	return false
 }
 
+func (g *GameImpl) getUnitAt(col, row int) *Unit {
+	for i, u := range g.state.Units {
+		if u.Col == col && u.Row == row {
+			return &g.state.Units[i]
+		}
+	}
+	return nil
+}
+
 func (g *GameImpl) buildingAt(col, row int) bool {
 	for _, b := range g.state.Buildings {
 		if b.Col == col && b.Row == row {
@@ -446,6 +456,11 @@ func (g *GameImpl) MoveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid request: %v", err), http.StatusBadRequest)
 		return
 	}
+	if req.PlayerID != g.state.CurrentPlayer {
+		g.logger.Warn("Unauthorized move attempt", "playerId", req.PlayerID, "currentPlayer", g.state.CurrentPlayer)
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
 	g.logger.Info("Move request", "type", req.Type, "from", fmt.Sprintf("(%d,%d)", req.FromCol, req.FromRow), "to", fmt.Sprintf("(%d,%d)", req.ToCol, req.ToRow))
 	if err := g.Move(r.Context(), req); err != nil {
 		g.logger.Error("Move failed", "error", err)
@@ -468,6 +483,11 @@ func (g *GameImpl) PlaceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid request: %v", err), http.StatusBadRequest)
 		return
 	}
+	if req.PlayerID != g.state.CurrentPlayer {
+		g.logger.Warn("Unauthorized place attempt", "playerId", req.PlayerID, "currentPlayer", g.state.CurrentPlayer)
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
 	g.logger.Info("Place request", "type", req.Type, "to", fmt.Sprintf("(%d,%d)", req.ToCol, req.ToRow))
 	if err := g.Place(r.Context(), req); err != nil {
 		g.logger.Error("Place failed", "error", err)
@@ -485,6 +505,7 @@ func (g *GameImpl) MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 		Row      int    `json:"row"`
 		Range    int    `json:"range"`
 		UnitType string `json:"unitType"`
+		PlayerID int    `json:"playerId"`
 	}
 	type Resp struct {
 		Tiles [][2]int `json:"tiles"`
@@ -493,6 +514,17 @@ func (g *GameImpl) MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		g.logger.Error("Bad request for move range", "error", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	// Check if the unit belongs to the requesting player
+	unit := g.getUnitAt(req.Col, req.Row)
+	if unit == nil || unit.Owner != req.PlayerID {
+		unitOwner := -1
+		if unit != nil {
+			unitOwner = unit.Owner
+		}
+		g.logger.Warn("Unauthorized move range request", "playerId", req.PlayerID, "unitOwner", unitOwner)
+		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 	tiles := g.getMoveRange(req.Col, req.Row, req.Range, req.UnitType)
@@ -507,6 +539,20 @@ func (g *GameImpl) MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 func (g *GameImpl) EndTurnHandler(w http.ResponseWriter, r *http.Request) {
 	if g.state == nil {
 		http.Error(w, "Game not initialized", http.StatusBadRequest)
+		return
+	}
+	type EndTurnRequest struct {
+		PlayerID int `json:"playerId"`
+	}
+	var req EndTurnRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		g.logger.Error("Bad end turn request", "error", err)
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	if req.PlayerID != g.state.CurrentPlayer {
+		g.logger.Warn("Unauthorized end turn attempt", "playerId", req.PlayerID, "currentPlayer", g.state.CurrentPlayer)
+		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 	// Reset all units' Moved flag
