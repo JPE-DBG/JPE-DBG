@@ -37,22 +37,22 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         switch (e.key.toLowerCase()) {
             case 'w':
             case 'arrowup':
-                state.setOffset(state.offsetX, state.offsetY - panSpeed);
+                state.setOffset(state.offsetX, state.offsetY + panSpeed);
                 scheduleDrawGrid();
                 break;
             case 's':
             case 'arrowdown':
-                state.setOffset(state.offsetX, state.offsetY + panSpeed);
+                state.setOffset(state.offsetX, state.offsetY - panSpeed);
                 scheduleDrawGrid();
                 break;
             case 'a':
             case 'arrowleft':
-                state.setOffset(state.offsetX - panSpeed, state.offsetY);
+                state.setOffset(state.offsetX + panSpeed, state.offsetY);
                 scheduleDrawGrid();
                 break;
             case 'd':
             case 'arrowright':
-                state.setOffset(state.offsetX + panSpeed, state.offsetY);
+                state.setOffset(state.offsetX - panSpeed, state.offsetY);
                 scheduleDrawGrid();
                 break;
             case 'q':
