@@ -14,6 +14,7 @@ applyTo: '**/*.go'
 - **Interfaces:** Define interfaces at the consumer side. Keep them small (1-3 methods).
 - **Dependency Injection:** Use constructors (`NewService`) with **Functional Options** for optional configuration.
 - **Decoupling:** Prefer `io.Reader`, `io.Writer`, and `fs.FS` over concrete file or network types.
+- **Strategy Pattern:** Use for behavior that varies based on a variable value (e.g., switch on type). Define strategy interfaces and implementations to replace large if-else/switch blocks, improving maintainability and testability.
 
 ## Go Implementation Standards
 - **Error Handling:** Use `errors.Join` and wrap errors with `%w`. Always check errors; never ignore them.
@@ -21,6 +22,7 @@ applyTo: '**/*.go'
 - **Standard Library:** Prioritize `slog` for structured logging and the enhanced `net/http` multiplexer for routing. 
 - **Generics:** Use generics (`[T any]`) to eliminate `interface{}` and type assertions where performance or safety is a concern.
 - **Memory Efficiency:** Use `sync.Pool` for hot-path allocations and prefer pointer receivers for large structs.
+- use switch instend of if-else for multiple conditions
 
 ## Code Quality & Safety
 - **Guard Clauses:** Mandatory early returns to minimize nesting and maintain low cyclomatic complexity.
