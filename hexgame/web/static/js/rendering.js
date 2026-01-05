@@ -248,7 +248,7 @@ function drawDynamicElements(ctx, canvas) {
                 if (unit.col % 2 !== 0) y += hexHeight / 2;
                 
                 if (isHexVisible(x, y, hexSize, canvas)) {
-                    drawUnit(x, y, hexSize, unit.moved, unit.owner === state.gameState.currentPlayer, unit.type, unit.owner, unit.tier, ctx);
+                    drawUnit(x, y, hexSize, unit.moved, unit.owner === window.currentPlayerId && state.gameState.currentPlayer === window.currentPlayerId, unit.type, unit.owner, unit.tier, ctx);
                 }
             }
         }
@@ -401,7 +401,7 @@ export function drawUnit(x, y, size, moved, isCurrentPlayer, unitType, owner, ti
     if (moved) {
         unitColor = '#bdbdbd'; // Grey if moved
     } else if (isCurrentPlayer) {
-        // Blink for movable units
+        // Blink for movable units of the current user
         const blink = Math.sin(Date.now() / 200) > 0;
         unitColor = blink ? playerColor : '#ffffff';
     } else {
