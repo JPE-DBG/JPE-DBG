@@ -8,7 +8,10 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type MapResponse struct {
@@ -36,6 +39,9 @@ type GameImpl struct {
 	logger          *slog.Logger
 	moveStrategies  map[string]Strategy
 	placeStrategies map[string]Strategy
+	clients         map[*websocket.Conn]bool
+	clientsMutex    sync.Mutex
+	upgrader        websocket.Upgrader
 }
 
 type Option func(*GameImpl)
@@ -258,8 +264,14 @@ func (s *PlaceAdvancedShipStrategy) Execute(g *GameImpl, req MoveRequest) error 
 
 func NewGame(opts ...Option) *GameImpl {
 	g := &GameImpl{
-		logger: slog.Default(),
-		state:  nil,
+		logger:  slog.Default(),
+		state:   nil,
+		clients: make(map[*websocket.Conn]bool),
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true // Allow connections from any origin for development
+			},
+		},
 		moveStrategies: map[string]Strategy{
 			"move": &MoveUnitStrategy{},
 		},
@@ -440,6 +452,7 @@ func (g *GameImpl) MoveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Errorf("move failed: %w", err).Error(), http.StatusBadRequest)
 		return
 	}
+	g.broadcastGameState()
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -461,6 +474,7 @@ func (g *GameImpl) PlaceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Errorf("place failed: %w", err).Error(), http.StatusBadRequest)
 		return
 	}
+	g.broadcastGameState()
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -527,11 +541,60 @@ func (g *GameImpl) EndTurnHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Errorf("failed to encode game state after end turn: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
-	// TODO: broadcast to WebSocket clients
+	g.broadcastGameState()
 }
 
 func (g *GameImpl) WebSocketHandler(w http.ResponseWriter, r *http.Request) {
-	// Implement with context
+	conn, err := g.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		g.logger.Error("Failed to upgrade WebSocket connection", "error", err)
+		return
+	}
+
+	// Add client to the clients map
+	g.clientsMutex.Lock()
+	g.clients[conn] = true
+	g.clientsMutex.Unlock()
+
+	g.logger.Info("WebSocket client connected", "remote_addr", r.RemoteAddr)
+
+	// Send initial game state
+	if err := conn.WriteJSON(g.state); err != nil {
+		g.logger.Error("Failed to send initial game state", "error", err)
+		conn.Close()
+		return
+	}
+
+	// Handle client disconnection
+	defer func() {
+		g.clientsMutex.Lock()
+		delete(g.clients, conn)
+		g.clientsMutex.Unlock()
+		conn.Close()
+		g.logger.Info("WebSocket client disconnected", "remote_addr", r.RemoteAddr)
+	}()
+
+	// Keep connection alive and handle any incoming messages (though we don't expect any from clients)
+	for {
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+	}
+}
+
+// broadcastGameState sends the current game state to all connected WebSocket clients
+func (g *GameImpl) broadcastGameState() {
+	g.clientsMutex.Lock()
+	defer g.clientsMutex.Unlock()
+
+	for conn := range g.clients {
+		if err := conn.WriteJSON(g.state); err != nil {
+			g.logger.Error("Failed to broadcast game state", "error", err)
+			conn.Close()
+			delete(g.clients, conn)
+		}
+	}
 }
 
 func (g *GameImpl) JoinHandler(w http.ResponseWriter, r *http.Request) {

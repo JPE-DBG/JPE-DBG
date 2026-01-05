@@ -64,6 +64,8 @@ applyTo: '**/*.js'
 - **Performance Techniques:** Use object pooling for entities, implement frustum culling, and batch draw calls.
 - **TypeScript Integration:** Use TypeScript for type safety in larger projects to catch errors early.
 - **Web Audio API:** Implement sound effects and music using Web Audio API for low-latency audio playback.
+- **Unique Declarations:** Avoid duplicate function or variable declarations; ensure all identifiers are unique within scope.
+- **Complete Implementations:** Fully implement event handlers and async operations with proper error handling and edge cases.
 
 ## Code Quality & Safety
 - **Guard Clauses:** Use early returns to reduce nesting and improve readability.
@@ -74,3 +76,4 @@ applyTo: '**/*.js'
 - **Profiling:** Use browser developer tools for performance monitoring and memory leak detection.
 - **Immutable State:** Prefer immutable updates to state objects to prevent unintended side effects.
 - **Asset Preloading:** Implement preloading for images and sounds to ensure smooth gameplay.
+- **Code Review Checks:** Verify no duplicate declarations, complete error handling, and adherence to async best practices.

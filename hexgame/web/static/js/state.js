@@ -1,6 +1,3 @@
-import * as state from './state.js';
-import * as perfMeasurement from './perfMeasurement.js';
-
 // --- State management for game, map, and UI ---
 export let ROWS = 0, COLS = 0;
 export let mapState = [];
@@ -26,6 +23,57 @@ let viewportState = {
 // Cache for hex positions
 let hexPositionCache = new Map();
 
+// Persistence with localStorage
+export function saveGameState() {
+    try {
+        const stateToSave = {
+            ROWS, COLS, mapState, selectedBarType, selectedTile, moveRange, zoom, offsetX, offsetY, isPanning, panStart, mapData, gameState, mapCenteredOnce
+        };
+        localStorage.setItem('hexgame_state', JSON.stringify(stateToSave));
+    } catch (e) {
+        console.error('Failed to save game state:', e);
+    }
+}
+
+export function loadGameState() {
+    try {
+        const saved = localStorage.getItem('hexgame_state');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Update individual variables
+            ROWS = parsed.ROWS || 0;
+            COLS = parsed.COLS || 0;
+            mapState = parsed.mapState || [];
+            selectedBarType = parsed.selectedBarType || null;
+            selectedTile = parsed.selectedTile || null;
+            moveRange = parsed.moveRange || [];
+            zoom = parsed.zoom || 1;
+            offsetX = parsed.offsetX || 0;
+            offsetY = parsed.offsetY || 0;
+            isPanning = parsed.isPanning || false;
+            panStart = parsed.panStart || {x: 0, y: 0, ox: 0, oy: 0};
+            mapData = parsed.mapData || null;
+            gameState = parsed.gameState || null;
+            mapCenteredOnce = parsed.mapCenteredOnce || false;
+        }
+    } catch (e) {
+        console.error('Failed to load game state:', e);
+    }
+}
+
+export async function fetchGame(regen = false, callback) {
+    try {
+        const url = regen ? '/api/game?regen=1' : '/api/game';
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch game');
+        const newGameState = await response.json();
+        setGameState(newGameState);
+        if (callback) callback();
+    } catch (error) {
+        console.error('Error fetching game:', error);
+    }
+}
+
 export function setSelectedBarType(type) { selectedBarType = type; }
 export function setSelectedTile(tile) { selectedTile = tile; }
 export function setMoveRange(range) { moveRange = range; }
@@ -48,6 +96,7 @@ export function setZoom(newZoom, centerX, centerY) {
 export function setOffset(x, y) {
     offsetX = x;
     offsetY = y;
+    // Update visible bounds when offset changes
     updateVisibleBounds();
 }
 
@@ -60,12 +109,12 @@ export function setGameState(state) {
     ROWS = gameState.rows;
     mapData = { tiles: gameState.tiles };
     
-    // Update UI when game state changes
-    updateGameUI();
-    
     // Clear caches when map changes
     hexPositionCache.clear();
     updateVisibleBounds();
+}
+export function clearHexPositionCache() {
+    hexPositionCache.clear();
 }
 export function setMapSize(cols, rows) { COLS = cols; ROWS = rows; }
 export function setMapCenteredOnce(val) { mapCenteredOnce = val; }
@@ -152,62 +201,6 @@ export function getVisibleBounds() {
     return viewportState;
 }
 
-// Export a function to clear the hex position cache
-export function clearHexPositionCache() {
-    hexPositionCache.clear();
-}
-
-// Fetch game state without updating the input fields
-export async function fetchGamePreserveInputs(draw = true, scheduleDrawGrid) {
-    const res = await fetch('/api/game');
-    gameState = await res.json();
-    COLS = gameState.cols;
-    ROWS = gameState.rows;
-    mapData = { tiles: gameState.tiles };
-
-    // Clear caches when map changes
-    hexPositionCache.clear();
-    updateVisibleBounds();
-
-    if (draw && typeof scheduleDrawGrid === 'function') scheduleDrawGrid();
-}
-
-export async function fetchGame(draw = true, scheduleDrawGrid) {
-    const res = await fetch('/api/game');
-    gameState = await res.json();
-    COLS = gameState.cols;
-    ROWS = gameState.rows;
-    mapData = { tiles: gameState.tiles };
-
-    // Update UI when game state changes
-    updateGameUI();
-
-    // Clear caches when map changes
-    hexPositionCache.clear();
-    updateVisibleBounds();
-
-    if (draw && typeof scheduleDrawGrid === 'function') scheduleDrawGrid();
-}
-
-export async function fetchMap(scheduleDrawGrid) {
-    const res = await fetch('/api/map');
-    mapData = await res.json();
-    COLS = mapData.cols;
-    ROWS = mapData.rows;
-    for (let col = 0; col < COLS; col++) {
-        mapState[col] = [];
-        for (let row = 0; row < ROWS; row++) {
-            mapState[col][row] = null;
-        }
-    }
-
-    // Clear caches when map changes
-    hexPositionCache.clear();
-    updateVisibleBounds();
-
-    if (typeof scheduleDrawGrid === 'function') scheduleDrawGrid();
-}
-
 // Optimized hex hit detection
 export function getHexAt(mx, my) {
     const hexSize = 30 * zoom;
@@ -231,6 +224,26 @@ export function getHexAt(mx, my) {
         }
     }
     return null;
+}
+
+// Fetch game state without updating the input fields
+export async function fetchMap(scheduleDrawGrid) {
+    const res = await fetch('/api/map');
+    mapData = await res.json();
+    COLS = mapData.cols;
+    ROWS = mapData.rows;
+    for (let col = 0; col < COLS; col++) {
+        mapState[col] = [];
+        for (let row = 0; row < ROWS; row++) {
+            mapState[col][row] = null;
+        }
+    }
+
+    // Clear caches when map changes
+    hexPositionCache.clear();
+    updateVisibleBounds();
+
+    if (typeof scheduleDrawGrid === 'function') scheduleDrawGrid();
 }
 
 // More precise hex hit detection

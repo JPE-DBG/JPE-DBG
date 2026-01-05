@@ -30,6 +30,42 @@ function handlePanUpdate(e, scheduleDrawGrid) {
 }
 
 export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
+    // Keyboard input handling
+    document.addEventListener('keydown', (e) => {
+        if (!e.key) return;
+        const panSpeed = 20;
+        switch (e.key.toLowerCase()) {
+            case 'w':
+            case 'arrowup':
+                state.setOffset(state.offsetX, state.offsetY - panSpeed);
+                scheduleDrawGrid();
+                break;
+            case 's':
+            case 'arrowdown':
+                state.setOffset(state.offsetX, state.offsetY + panSpeed);
+                scheduleDrawGrid();
+                break;
+            case 'a':
+            case 'arrowleft':
+                state.setOffset(state.offsetX - panSpeed, state.offsetY);
+                scheduleDrawGrid();
+                break;
+            case 'd':
+            case 'arrowright':
+                state.setOffset(state.offsetX + panSpeed, state.offsetY);
+                scheduleDrawGrid();
+                break;
+            case 'q':
+                state.setZoom(Math.max(0.25, state.zoom * 0.9), canvas.width / 2, canvas.height / 2);
+                scheduleDrawGrid();
+                break;
+            case 'e':
+                state.setZoom(Math.min(2.5, state.zoom * 1.1), canvas.width / 2, canvas.height / 2);
+                scheduleDrawGrid();
+                break;
+        }
+    });
+
     // Optimized wheel zoom handler
     const handleWheel = (e) => {
         e.preventDefault();
@@ -83,11 +119,52 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         }
     });
     
-    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('contextmenu', async (e) => {
+        e.preventDefault();
+        
+        if (!state.gameState || !state.selectedTile) {
+            return;
+        }
+        
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        
+        const tile = state.getHexAt(mx, my);
+        if (!tile) {
+            return;
+        }
+        
+        const { col, row } = tile;
+        const unit = state.gameState.units.find(u => u.col === col && u.row === row);
+        const building = state.gameState.buildings.find(b => b.col === col && b.row === row);
+        
+        // Check if there's an enemy unit or building to attack
+        if ((unit && unit.owner !== state.gameState.currentPlayer) || (building && building.owner !== state.gameState.currentPlayer)) {
+            // Check if the target is in range (attack range = 5, same as movement)
+            const distance = state.hexDistance(state.selectedTile.col, state.selectedTile.row, col, row);
+            if (distance <= 5) {
+                await fetch('/api/move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'attack',
+                        fromCol: state.selectedTile.col,
+                        fromRow: state.selectedTile.row,
+                        toCol: col,
+                        toRow: row
+                    })
+                });
+                debouncedGameUpdate();
+                state.setSelectedTile(null);
+                state.setMoveRange([]);
+            }
+        }
+    });
     
     // Batch UI updates
     const debouncedGameUpdate = debounce(async () => {
-        await state.fetchGame(true, scheduleDrawGrid);
+        await state.fetchGame(false, scheduleDrawGrid);
         state.setSelectedTile(null);
         state.setMoveRange([]);
     }, 250);
@@ -105,8 +182,12 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
     });
 
     document.getElementById('nextTurnBtn')?.addEventListener('click', async () => {
-        await fetch('/api/endturn', { method: 'POST' });
-        debouncedGameUpdate();
+        try {
+            await fetch('/api/endturn', { method: 'POST' });
+            debouncedGameUpdate();
+        } catch (error) {
+            console.error('Error ending turn:', error);
+        }
     });
 
     document.getElementById('regenMapBtn')?.addEventListener('click', async () => {
@@ -221,29 +302,38 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
             else if (state.selectedBarType === 'port') type = 'place_port';
             else if (state.selectedBarType === 'fort') type = 'place_fort';
             if (type) {
-                const url = type === 'move' ? '/api/move' : '/api/place';
-                await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, toCol: col, toRow: row })
-                });
-                // Update game state and clear selection
-                state.setSelectedBarType(null);
-                document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
-                await debouncedGameUpdate();
-                scheduleDrawGrid();
+                try {
+                    const url = type === 'move' ? '/api/move' : '/api/place';
+                    await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type, toCol: col, toRow: row })
+                    });
+                    // Update game state and clear selection
+                    state.setSelectedBarType(null);
+                    document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('selected'));
+                    await debouncedGameUpdate();
+                    scheduleDrawGrid();
+                } catch (error) {
+                    console.error('Error placing unit/building:', error);
+                }
             }
         } else if (unit) {
             // Handle unit selection
             state.setSelectedTile({col, row});
             if (!unit.moved && unit.owner === state.gameState.currentPlayer) {
-                const res = await fetch('/api/move-range', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ col, row, range: 5, unitType: unit.type })
-                });
-                const data = await res.json();
-                state.setMoveRange(data.tiles.map(([c, r]) => ({col: c, row: r})));
+                try {
+                    const res = await fetch('/api/move-range', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ col, row, range: 5, unitType: unit.type })
+                    });
+                    const data = await res.json();
+                    state.setMoveRange(data.tiles.map(([c, r]) => ({col: c, row: r})));
+                } catch (error) {
+                    console.error('Error fetching move range:', error);
+                    state.setMoveRange([]);
+                }
             } else {
                 state.setMoveRange([]);
             }
@@ -253,19 +343,23 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
             // Handle unit movement
             const inRange = state.moveRange.some(t => t.col === col && t.row === row);
             if (inRange) {
-                await fetch('/api/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'move',
-                        fromCol: state.selectedTile.col,
-                        fromRow: state.selectedTile.row,
-                        toCol: col,
-                        toRow: row
-                    })
-                });
-                debouncedGameUpdate();
-                state.setSelectedTile({col, row});
+                try {
+                    await fetch('/api/move', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'move',
+                            fromCol: state.selectedTile.col,
+                            fromRow: state.selectedTile.row,
+                            toCol: col,
+                            toRow: row
+                        })
+                    });
+                    debouncedGameUpdate();
+                    state.setSelectedTile({col, row});
+                } catch (error) {
+                    console.error('Error moving unit:', error);
+                }
             }
             
         } else {
@@ -278,7 +372,7 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
 
     // Right-click handler for attacks
     canvas.addEventListener('contextmenu', async (e) => {
-        e.preventDefault(); // Prevent the default context menu
+        e.preventDefault();
         
         if (!state.gameState || !state.selectedTile) {
             return;
@@ -302,21 +396,76 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
             // Check if the target is in range (attack range = 5, same as movement)
             const distance = state.hexDistance(state.selectedTile.col, state.selectedTile.row, col, row);
             if (distance <= 5) {
-                await fetch('/api/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'attack',
-                        fromCol: state.selectedTile.col,
-                        fromRow: state.selectedTile.row,
-                        toCol: col,
-                        toRow: row
-                    })
-                });
-                debouncedGameUpdate();
-                state.setSelectedTile(null);
-                state.setMoveRange([]);
+                try {
+                    await fetch('/api/move', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'attack',
+                            fromCol: state.selectedTile.col,
+                            fromRow: state.selectedTile.row,
+                            toCol: col,
+                            toRow: row
+                        })
+                    });
+                    debouncedGameUpdate();
+                    state.setSelectedTile(null);
+                    state.setMoveRange([]);
+                } catch (error) {
+                    console.error('Error attacking:', error);
+                }
             }
+        }
+    });
+
+    // Touch support for mobile
+    let touchStartX = 0, touchStartY = 0;
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        state.isPanning = true;
+        state.panStart = { x: touch.clientX, y: touch.clientY, ox: state.offsetX, oy: state.offsetY };
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (state.isPanning && e.touches.length === 1) {
+            const touch = e.touches[0];
+            state.setOffset(
+                state.panStart.ox + (touch.clientX - state.panStart.x),
+                state.panStart.oy + (touch.clientY - state.panStart.y)
+            );
+            scheduleDrawGrid();
+        }
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        state.isPanning = false;
+    });
+
+    // Pinch zoom for touch
+    let initialDistance = 0;
+    canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            initialDistance = Math.sqrt(dx * dx + dy * dy);
+        }
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const scale = distance / initialDistance;
+            const newZoom = Math.max(0.25, Math.min(2.5, state.zoom * scale));
+            state.setZoom(newZoom, canvas.width / 2, canvas.height / 2);
+            initialDistance = distance;
+            scheduleDrawGrid();
         }
     });
 }

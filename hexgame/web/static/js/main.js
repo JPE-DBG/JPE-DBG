@@ -3,6 +3,62 @@ import { drawGrid } from './rendering.js';
 import * as state from './state.js'; 
 import * as perfTestUI from './perfTestUI.js';
 
+// Game state machine
+export const GAME_STATES = {
+    LOADING: 'loading',
+    MENU: 'menu',
+    PLAYING: 'playing',
+    PAUSED: 'paused'
+};
+
+let currentGameState = GAME_STATES.LOADING;
+
+// Asset management
+const assets = {
+    images: {},
+    sounds: {}
+};
+
+async function preloadAssets() {
+    const imagePromises = [];
+    // Add image preloading here if needed, e.g., sprites
+    // For now, placeholder
+    
+    const soundPromises = [];
+    // Placeholder for sound loading, e.g., loadSound('click', 'sounds/click.wav')
+    
+    return Promise.all([...imagePromises, ...soundPromises]);
+}
+
+// Web Audio API setup
+let audioContext;
+function initAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.error('Web Audio API not supported:', e);
+    }
+}
+
+// Simple sound manager
+const sounds = {};
+function loadSound(name, url) {
+    return fetch(url)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+            sounds[name] = audioBuffer;
+        });
+}
+
+function playSound(name) {
+    if (!audioContext || !sounds[name]) return;
+    const source = audioContext.createBufferSource();
+    source.buffer = sounds[name];
+    source.connect(audioContext.destination);
+    source.start();
+}
+
 const canvas = document.getElementById('hexCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -49,6 +105,18 @@ function centerMapView() {
 
 async function initGame() {
     try {
+        // Set loading state
+        currentGameState = GAME_STATES.LOADING;
+        
+        // Preload assets
+        await preloadAssets();
+        
+        // Initialize audio
+        initAudio();
+        
+        // Load saved state
+        state.loadGameState();
+        
         // Fetch game state to get dimensions and set input fields
         await state.fetchGame(false, scheduleDrawGrid);
         
@@ -82,6 +150,12 @@ async function initGame() {
                 console.error('Error parsing WebSocket message:', error);
             }
         };
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+        ws.onclose = () => {
+            console.log('WebSocket closed');
+        };
         
         // Schedule the first draw
         scheduleDrawGrid();
@@ -91,8 +165,17 @@ async function initGame() {
 
         // Start animation loop
         startAnimationLoop();
+        
+        // Transition to playing state
+        currentGameState = GAME_STATES.PLAYING;
+        
+        // Save state periodically
+        setInterval(() => {
+            state.saveGameState();
+        }, 30000); // Every 30 seconds
     } catch (error) {
         console.error('Error initializing game:', error);
+        currentGameState = GAME_STATES.MENU; // Fallback
     }
 }
 
