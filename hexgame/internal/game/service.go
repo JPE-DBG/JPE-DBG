@@ -133,6 +133,63 @@ func (g *GameImpl) Move(ctx context.Context, req MoveRequest) error {
 			}
 		}
 		return errors.New("insufficient resources")
+	} else if req.Type == "place_city" {
+		if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
+			return errors.New("cannot place city here")
+		}
+		config := BuildingConfigs["city"]
+		for i, p := range g.state.Players {
+			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+				g.state.Players[i].Gold -= config.CostGold
+				g.state.Players[i].Wood -= config.CostWood
+				g.state.Players[i].Iron -= config.CostIron
+				g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "city"})
+				return nil
+			}
+		}
+		return errors.New("insufficient resources")
+	} else if req.Type == "place_port" {
+		if g.state.Tiles[req.ToCol][req.ToRow].Type != "water" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
+			return errors.New("cannot place port here")
+		}
+		// Check if adjacent to land
+		adjacentToLand := false
+		for _, n := range hexNeighbors(req.ToCol, req.ToRow, g.state.Cols, g.state.Rows) {
+			nc, nr := n[0], n[1]
+			if g.state.Tiles[nc][nr].Type == "land" {
+				adjacentToLand = true
+				break
+			}
+		}
+		if !adjacentToLand {
+			return errors.New("port must be placed on water adjacent to land")
+		}
+		config := BuildingConfigs["port"]
+		for i, p := range g.state.Players {
+			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+				g.state.Players[i].Gold -= config.CostGold
+				g.state.Players[i].Wood -= config.CostWood
+				g.state.Players[i].Iron -= config.CostIron
+				g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "port"})
+				return nil
+			}
+		}
+		return errors.New("insufficient resources")
+	} else if req.Type == "place_fort" {
+		if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
+			return errors.New("cannot place fort here")
+		}
+		config := BuildingConfigs["fort"]
+		for i, p := range g.state.Players {
+			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+				g.state.Players[i].Gold -= config.CostGold
+				g.state.Players[i].Wood -= config.CostWood
+				g.state.Players[i].Iron -= config.CostIron
+				g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "fort"})
+				return nil
+			}
+		}
+		return errors.New("insufficient resources")
 	}
 	return errors.New("unknown move type")
 }
