@@ -49,6 +49,8 @@ applyTo: '**/*.js'
 - **Component-Based UI:** For UI elements, use reusable components with clear interfaces.
 - **Grid-Based Systems:** For tile or hex-based games, implement grid management for positioning, pathfinding, and collision detection.
 - **Rendering Layers:** Separate background, game objects, and UI layers for efficient rendering and updates.
+- **Game State Machine:** Implement finite state machines for game phases (menu, loading, playing, paused) to manage transitions cleanly.
+- **Asset Management:** Preload and cache game assets (images, sounds) to avoid runtime delays and improve performance.
 
 ## JavaScript Implementation Standards
 - **Modern ES6+:** Use `const`/`let`, arrow functions, classes, template literals, and async/await.
@@ -60,6 +62,8 @@ applyTo: '**/*.js'
 - **Animation Systems:** Implement sprite animation with frame timing and interpolation for smooth visuals.
 - **Input Handling:** Debounce inputs, handle multiple devices (mouse, touch, keyboard), and map to game actions.
 - **Performance Techniques:** Use object pooling for entities, implement frustum culling, and batch draw calls.
+- **TypeScript Integration:** Use TypeScript for type safety in larger projects to catch errors early.
+- **Web Audio API:** Implement sound effects and music using Web Audio API for low-latency audio playback.
 
 ## Code Quality & Safety
 - **Guard Clauses:** Use early returns to reduce nesting and improve readability.
@@ -68,3 +72,5 @@ applyTo: '**/*.js'
 - **Accessibility:** Ensure keyboard navigation and screen reader support where applicable.
 - **Security:** Avoid `eval`, sanitize user inputs, and use HTTPS for secure connections.
 - **Profiling:** Use browser developer tools for performance monitoring and memory leak detection.
+- **Immutable State:** Prefer immutable updates to state objects to prevent unintended side effects.
+- **Asset Preloading:** Implement preloading for images and sounds to ensure smooth gameplay.
