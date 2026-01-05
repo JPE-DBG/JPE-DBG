@@ -47,45 +47,53 @@ function centerMapView() {
     state.setOffset(canvasCenterX - mapCenterX, canvasCenterY - mapCenterY);
 }
 
-async function initGame() {    
-    // Fetch game state to get dimensions and set input fields
-    await state.fetchGame(false, scheduleDrawGrid);
-    
-    // Now resize the canvas (sets width/height)
-    resizeCanvas(true); // Skip draw, but sets canvas size
-    
-    // Explicitly center the map now that we have dimensions
-    centerMapView();
-    state.setMapCenteredOnce(true);
-    
-    // Provide state management functions to the performance testing module
-    perfTestUI.setStateFunctions({
-        gameState: state.gameState,
-        setOffset: state.setOffset,
-        setZoom: state.setZoom,
-        offsetX: state.offsetX,
-        offsetY: state.offsetY,
-        zoom: state.zoom,
-        COLS: state.COLS,
-        ROWS: state.ROWS,
-    });
-    
-    // Connect to WebSocket
-    const ws = new WebSocket('ws://localhost:8080/ws');
-    ws.onmessage = (event) => {
-        const newGameState = JSON.parse(event.data);
-        state.setGameState(newGameState);
+async function initGame() {
+    try {
+        // Fetch game state to get dimensions and set input fields
+        await state.fetchGame(false, scheduleDrawGrid);
+        
+        // Now resize the canvas (sets width/height)
+        resizeCanvas(true); // Skip draw, but sets canvas size
+        
+        // Explicitly center the map now that we have dimensions
+        centerMapView();
+        state.setMapCenteredOnce(true);
+        
+        // Provide state management functions to the performance testing module
+        perfTestUI.setStateFunctions({
+            gameState: state.gameState,
+            setOffset: state.setOffset,
+            setZoom: state.setZoom,
+            offsetX: state.offsetX,
+            offsetY: state.offsetY,
+            zoom: state.zoom,
+            COLS: state.COLS,
+            ROWS: state.ROWS,
+        });
+        
+        // Connect to WebSocket
+        const ws = new WebSocket('ws://localhost:8080/ws');
+        ws.onmessage = (event) => {
+            try {
+                const newGameState = JSON.parse(event.data);
+                state.setGameState(newGameState);
+                scheduleDrawGrid();
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
+        
+        // Schedule the first draw
         scheduleDrawGrid();
-    };
-    
-    // Schedule the first draw
-    scheduleDrawGrid();
-    
-    // Initialize the performance testing UI
-    perfTestUI.createPerfTestUI();
+        
+        // Initialize the performance testing UI
+        perfTestUI.createPerfTestUI();
 
-    // Start animation loop
-    startAnimationLoop();
+        // Start animation loop
+        startAnimationLoop();
+    } catch (error) {
+        console.error('Error initializing game:', error);
+    }
 }
 
 // Player identification

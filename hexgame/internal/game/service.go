@@ -60,9 +60,10 @@ func (s *MoveUnitStrategy) Execute(g *GameImpl, req MoveRequest) error {
 	for i, u := range g.state.Units {
 		if u.Col == req.FromCol && u.Row == req.FromRow && !u.Moved && u.Owner == g.state.CurrentPlayer {
 			valid := false
-			if u.Type == "ship" {
+			switch u.Type {
+			case "ship":
 				valid = g.state.Tiles[req.ToCol][req.ToRow].Type == "water" && !g.unitAt(req.ToCol, req.ToRow) && !g.buildingAt(req.ToCol, req.ToRow)
-			} else if u.Type == "troop" {
+			case "troop":
 				valid = g.state.Tiles[req.ToCol][req.ToRow].Type == "land" && !g.unitAt(req.ToCol, req.ToRow) && !g.buildingAt(req.ToCol, req.ToRow)
 			}
 			if valid {
@@ -345,9 +346,10 @@ func (g *GameImpl) getMoveRange(col, row, rng int, unitType string) [][2]int {
 			nc, nr := n[0], n[1]
 			if !visited[nc][nr] {
 				valid := false
-				if unitType == "ship" {
+				switch unitType {
+				case "ship":
 					valid = (g.state.Tiles[nc][nr].Type == "land" || g.state.Tiles[nc][nr].Type == "water") && !g.unitAt(nc, nr) && !g.buildingAt(nc, nr)
-				} else if unitType == "troop" {
+				case "troop":
 					valid = g.state.Tiles[nc][nr].Type == "land" && !g.unitAt(nc, nr) && !g.buildingAt(nc, nr)
 				}
 				if valid {
@@ -385,7 +387,7 @@ func (g *GameImpl) MapHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		g.logger.Error("Failed to encode map response", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("failed to encode map response: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 	g.logger.Info("Generated map", "cols", cols, "rows", rows, "duration", time.Since(start))
@@ -415,7 +417,7 @@ func (g *GameImpl) GameHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(g.state); err != nil {
 		g.logger.Error("Failed to encode game state", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("failed to encode game state: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -435,7 +437,7 @@ func (g *GameImpl) MoveHandler(w http.ResponseWriter, r *http.Request) {
 	g.logger.Info("Move request", "type", req.Type, "from", fmt.Sprintf("(%d,%d)", req.FromCol, req.FromRow), "to", fmt.Sprintf("(%d,%d)", req.ToCol, req.ToRow))
 	if err := g.Move(r.Context(), req); err != nil {
 		g.logger.Error("Move failed", "error", err)
-		http.Error(w, fmt.Sprintf("Move failed: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Errorf("move failed: %w", err).Error(), http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -456,7 +458,7 @@ func (g *GameImpl) PlaceHandler(w http.ResponseWriter, r *http.Request) {
 	g.logger.Info("Place request", "type", req.Type, "to", fmt.Sprintf("(%d,%d)", req.ToCol, req.ToRow))
 	if err := g.Place(r.Context(), req); err != nil {
 		g.logger.Error("Place failed", "error", err)
-		http.Error(w, fmt.Sprintf("Place failed: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Errorf("place failed: %w", err).Error(), http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -483,7 +485,7 @@ func (g *GameImpl) MoveRangeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(Resp{Tiles: tiles}); err != nil {
 		g.logger.Error("Failed to encode move range", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("failed to encode move range: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -522,7 +524,7 @@ func (g *GameImpl) EndTurnHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(g.state); err != nil {
 		g.logger.Error("Failed to encode game state after end turn", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("failed to encode game state after end turn: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 	// TODO: broadcast to WebSocket clients
@@ -597,7 +599,7 @@ func (g *GameImpl) JoinHandler(w http.ResponseWriter, r *http.Request) {
 		"gameState": g.state,
 	}); err != nil {
 		g.logger.Error("Failed to encode join response", "error", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("failed to encode join response: %w", err).Error(), http.StatusInternalServerError)
 		return
 	}
 }
