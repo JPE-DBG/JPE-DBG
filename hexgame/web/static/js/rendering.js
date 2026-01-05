@@ -52,7 +52,11 @@ export function drawGrid(ctx, canvas) {
     const deltaY = state.offsetY - lastDrawnState.offsetY;
     const zoomChanged = state.zoom !== lastDrawnState.zoom;
     
-    if (!zoomChanged && Math.abs(deltaX) < canvas.width && Math.abs(deltaY) < canvas.height) {
+    // Only use the optimized "shift existing content" path when we have
+    // previously-drawn tiles cached. On the very first draw (or after
+    // explicit invalidation) the offscreen canvas is empty and shifting
+    // it will leave large areas blank — force a full redraw in that case.
+    if (lastDrawnState.visibleTiles.size > 0 && !zoomChanged && Math.abs(deltaX) < canvas.width && Math.abs(deltaY) < canvas.height) {
         // Shift existing content
         offscreenCtx.save();
         offscreenCtx.globalCompositeOperation = 'copy';
