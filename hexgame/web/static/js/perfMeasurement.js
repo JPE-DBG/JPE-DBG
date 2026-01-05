@@ -9,16 +9,11 @@
 let lastFrameTime = performance.now();
 let renderStart = 0;
 let renderTime = 0;
-let totalRenderTime = 0;
 let tilesPerFrame = 0;
-let frameTimeHistory = [];
 let isPerfTracking = false;
 let scrollTrackingActive = false;
 let lastTileCount = 0;
 let maxTileCount = 0;
-let tileRenderCount = 0;
-let minFrameTime = Number.MAX_VALUE;
-let maxFrameTime = 0;
 let totalScrollFrames = 0;
 
 // For improved measurement
@@ -34,7 +29,6 @@ let autoScrollSpeed = 8; // pixels per frame
 let autoScrollPosition = 0;
 let autoScrollMaxPosition = 0;
 let autoScrollInitialX = 0; // Store initial X position
-let originalMapPosition = { x: 0, y: 0 };
 let autoScrollAnimationId = null;
 
 // Auto-test phases
@@ -170,9 +164,6 @@ export function startAutoScroll(gameState, setOffset, setZoom, offsetX, offsetY,
     
     // Reset phase metrics for new test run
     resetPhaseMetrics();
-    
-    // Save original position to restore later if needed
-    originalMapPosition = { x: offsetX, y: offsetY };
     
     // Define test phases
     testPhases = [
@@ -338,11 +329,6 @@ export function stopPerfTracking() {
 
 // Reset all performance metrics
 export function resetPerfMetrics() {
-    totalRenderTime = 0;
-    tileRenderCount = 0;
-    frameTimeHistory = [];
-    minFrameTime = Number.MAX_VALUE;
-    maxFrameTime = 0;
     totalScrollFrames = 0;
     actualFrameTimes = [];
     frameTileCounts = [];

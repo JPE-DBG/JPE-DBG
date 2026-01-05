@@ -112,6 +112,7 @@ export function setGameState(state) {
     // Clear caches when map changes
     hexPositionCache.clear();
     updateVisibleBounds();
+    updateGameUI();
 }
 export function clearHexPositionCache() {
     hexPositionCache.clear();
