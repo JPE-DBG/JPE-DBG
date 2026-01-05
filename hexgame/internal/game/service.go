@@ -32,8 +32,10 @@ type Game interface {
 }
 
 type GameImpl struct {
-	state  *GameState
-	logger *slog.Logger
+	state           *GameState
+	logger          *slog.Logger
+	moveStrategies  map[string]Strategy
+	placeStrategies map[string]Strategy
 }
 
 type Option func(*GameImpl)
@@ -48,10 +50,227 @@ func WithInitialSize(cols, rows int) Option {
 	}
 }
 
+type Strategy interface {
+	Execute(g *GameImpl, req MoveRequest) error
+}
+
+type MoveUnitStrategy struct{}
+
+func (s *MoveUnitStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	for i, u := range g.state.Units {
+		if u.Col == req.FromCol && u.Row == req.FromRow && !u.Moved && u.Owner == g.state.CurrentPlayer {
+			valid := false
+			if u.Type == "ship" {
+				valid = g.state.Tiles[req.ToCol][req.ToRow].Type == "water" && !g.unitAt(req.ToCol, req.ToRow) && !g.buildingAt(req.ToCol, req.ToRow)
+			} else if u.Type == "troop" {
+				valid = g.state.Tiles[req.ToCol][req.ToRow].Type == "land" && !g.unitAt(req.ToCol, req.ToRow) && !g.buildingAt(req.ToCol, req.ToRow)
+			}
+			if valid {
+				g.state.Units[i].Col = req.ToCol
+				g.state.Units[i].Row = req.ToRow
+				g.state.Units[i].Moved = true
+				return nil
+			}
+			return errors.New("invalid move")
+		}
+	}
+	return errors.New("unit not found or already moved")
+}
+
+type PlaceShipStrategy struct{}
+
+func (s *PlaceShipStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	canPlaceShip := false
+	for _, b := range g.state.Buildings {
+		if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "port" && b.Owner == g.state.CurrentPlayer {
+			canPlaceShip = true
+			break
+		}
+	}
+	if !canPlaceShip || g.unitAt(req.ToCol, req.ToRow) {
+		return errors.New("ships must be placed at a port")
+	}
+	config := UnitConfigs["ship"][1]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Units = append(g.state.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: g.state.CurrentPlayer, Type: "ship", Tier: 1, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
+type PlaceTroopStrategy struct{}
+
+func (s *PlaceTroopStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	hasCity := false
+	for _, b := range g.state.Buildings {
+		if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "city" && b.Owner == g.state.CurrentPlayer {
+			hasCity = true
+			break
+		}
+	}
+	if !hasCity || g.unitAt(req.ToCol, req.ToRow) {
+		return errors.New("troops must be placed on a city")
+	}
+	config := UnitConfigs["troop"][1]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Units = append(g.state.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: g.state.CurrentPlayer, Type: "troop", Tier: 1, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
+type PlaceCityStrategy struct{}
+
+func (s *PlaceCityStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
+		return errors.New("cities must be placed on land")
+	}
+	config := BuildingConfigs["city"]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron && p.Research >= config.CostResearch {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Players[i].Research -= config.CostResearch
+			g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "city"})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
+type PlacePortStrategy struct{}
+
+func (s *PlacePortStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
+		return errors.New("ports must be placed on land adjacent to water")
+	}
+	// Check if adjacent to water
+	adjacentToWater := false
+	for _, n := range hexNeighbors(req.ToCol, req.ToRow, g.state.Cols, g.state.Rows) {
+		nc, nr := n[0], n[1]
+		if g.state.Tiles[nc][nr].Type == "water" {
+			adjacentToWater = true
+			break
+		}
+	}
+	if !adjacentToWater {
+		return errors.New("ports must be placed on land adjacent to water")
+	}
+	config := BuildingConfigs["port"]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron && p.Research >= config.CostResearch {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Players[i].Research -= config.CostResearch
+			g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "port"})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
+type PlaceFortStrategy struct{}
+
+func (s *PlaceFortStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
+		return errors.New("forts must be placed on land")
+	}
+	config := BuildingConfigs["fort"]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron && p.Research >= config.CostResearch {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Players[i].Research -= config.CostResearch
+			g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "fort"})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
+type PlaceAdvancedTroopStrategy struct{}
+
+func (s *PlaceAdvancedTroopStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	hasCity := false
+	for _, b := range g.state.Buildings {
+		if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "city" && b.Owner == g.state.CurrentPlayer {
+			hasCity = true
+			break
+		}
+	}
+	if !hasCity || g.unitAt(req.ToCol, req.ToRow) {
+		return errors.New("advanced troops must be placed on a city")
+	}
+	config := UnitConfigs["troop"][2]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron && p.Research >= config.CostResearch {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Players[i].Research -= config.CostResearch
+			g.state.Units = append(g.state.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: g.state.CurrentPlayer, Type: "troop", Tier: 2, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
+type PlaceAdvancedShipStrategy struct{}
+
+func (s *PlaceAdvancedShipStrategy) Execute(g *GameImpl, req MoveRequest) error {
+	canPlaceShip := false
+	for _, b := range g.state.Buildings {
+		if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "port" && b.Owner == g.state.CurrentPlayer {
+			canPlaceShip = true
+			break
+		}
+	}
+	if !canPlaceShip || g.unitAt(req.ToCol, req.ToRow) {
+		return errors.New("advanced ships must be placed at a port")
+	}
+	config := UnitConfigs["ship"][2]
+	for i, p := range g.state.Players {
+		if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron && p.Research >= config.CostResearch {
+			g.state.Players[i].Gold -= config.CostGold
+			g.state.Players[i].Wood -= config.CostWood
+			g.state.Players[i].Iron -= config.CostIron
+			g.state.Players[i].Research -= config.CostResearch
+			g.state.Units = append(g.state.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: g.state.CurrentPlayer, Type: "ship", Tier: 2, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
+			return nil
+		}
+	}
+	return errors.New("insufficient resources")
+}
+
 func NewGame(opts ...Option) *GameImpl {
 	g := &GameImpl{
 		logger: slog.Default(),
 		state:  nil,
+		moveStrategies: map[string]Strategy{
+			"move": &MoveUnitStrategy{},
+		},
+		placeStrategies: map[string]Strategy{
+			"place_ship":           &PlaceShipStrategy{},
+			"place_troop":          &PlaceTroopStrategy{},
+			"place_city":           &PlaceCityStrategy{},
+			"place_port":           &PlacePortStrategy{},
+			"place_fort":           &PlaceFortStrategy{},
+			"place_advanced_ship":  &PlaceAdvancedShipStrategy{},
+			"place_advanced_troop": &PlaceAdvancedTroopStrategy{},
+		},
 	}
 	for _, opt := range opts {
 		opt(g)
@@ -69,129 +288,19 @@ func (g *GameImpl) GetState(ctx context.Context) (*GameState, error) {
 func (g *GameImpl) Move(ctx context.Context, req MoveRequest) error {
 	g.logger.Info("Processing move", "type", req.Type, "fromCol", req.FromCol, "fromRow", req.FromRow, "toCol", req.ToCol, "toRow", req.ToRow)
 	if req.Type == "move" {
-		for i, u := range g.state.Units {
-			if u.Col == req.FromCol && u.Row == req.FromRow && !u.Moved && u.Owner == g.state.CurrentPlayer {
-				valid := false
-				if u.Type == "ship" {
-					valid = g.state.Tiles[req.ToCol][req.ToRow].Type == "water" && !g.unitAt(req.ToCol, req.ToRow) && !g.buildingAt(req.ToCol, req.ToRow)
-				} else if u.Type == "troop" {
-					valid = g.state.Tiles[req.ToCol][req.ToRow].Type == "land" && !g.unitAt(req.ToCol, req.ToRow) && !g.buildingAt(req.ToCol, req.ToRow)
-				}
-				if valid {
-					g.state.Units[i].Col = req.ToCol
-					g.state.Units[i].Row = req.ToRow
-					g.state.Units[i].Moved = true
-					return nil
-				}
-				return errors.New("invalid move")
-			}
+		if strategy, ok := g.moveStrategies[req.Type]; ok {
+			return strategy.Execute(g, req)
 		}
-		return errors.New("unit not found or already moved")
-	} else if req.Type == "place_ship" {
-		canPlaceShip := g.state.Tiles[req.ToCol][req.ToRow].Type == "water"
-		if !canPlaceShip {
-			for _, b := range g.state.Buildings {
-				if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "port" && b.Owner == g.state.CurrentPlayer {
-					canPlaceShip = true
-					break
-				}
-			}
-		}
-		if !canPlaceShip || g.unitAt(req.ToCol, req.ToRow) {
-			return errors.New("cannot place ship here")
-		}
-		config := UnitConfigs["ship"][1]
-		for i, p := range g.state.Players {
-			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
-				g.state.Players[i].Gold -= config.CostGold
-				g.state.Players[i].Wood -= config.CostWood
-				g.state.Players[i].Iron -= config.CostIron
-				g.state.Units = append(g.state.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: g.state.CurrentPlayer, Type: "ship", Tier: 1, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
-				return nil
-			}
-		}
-		return errors.New("insufficient resources")
-	} else if req.Type == "place_troop" {
-		hasCity := false
-		for _, b := range g.state.Buildings {
-			if b.Col == req.ToCol && b.Row == req.ToRow && b.Type == "city" && b.Owner == g.state.CurrentPlayer {
-				hasCity = true
-				break
-			}
-		}
-		if !hasCity || g.unitAt(req.ToCol, req.ToRow) {
-			return errors.New("cannot place troop here")
-		}
-		config := UnitConfigs["troop"][1]
-		for i, p := range g.state.Players {
-			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
-				g.state.Players[i].Gold -= config.CostGold
-				g.state.Players[i].Wood -= config.CostWood
-				g.state.Players[i].Iron -= config.CostIron
-				g.state.Units = append(g.state.Units, Unit{Col: req.ToCol, Row: req.ToRow, Moved: false, Owner: g.state.CurrentPlayer, Type: "troop", Tier: 1, Health: config.Stats.Health, Attack: config.Stats.Attack, Defense: config.Stats.Defense})
-				return nil
-			}
-		}
-		return errors.New("insufficient resources")
-	} else if req.Type == "place_city" {
-		if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
-			return errors.New("cannot place city here")
-		}
-		config := BuildingConfigs["city"]
-		for i, p := range g.state.Players {
-			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
-				g.state.Players[i].Gold -= config.CostGold
-				g.state.Players[i].Wood -= config.CostWood
-				g.state.Players[i].Iron -= config.CostIron
-				g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "city"})
-				return nil
-			}
-		}
-		return errors.New("insufficient resources")
-	} else if req.Type == "place_port" {
-		if g.state.Tiles[req.ToCol][req.ToRow].Type != "water" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
-			return errors.New("cannot place port here")
-		}
-		// Check if adjacent to land
-		adjacentToLand := false
-		for _, n := range hexNeighbors(req.ToCol, req.ToRow, g.state.Cols, g.state.Rows) {
-			nc, nr := n[0], n[1]
-			if g.state.Tiles[nc][nr].Type == "land" {
-				adjacentToLand = true
-				break
-			}
-		}
-		if !adjacentToLand {
-			return errors.New("port must be placed on water adjacent to land")
-		}
-		config := BuildingConfigs["port"]
-		for i, p := range g.state.Players {
-			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
-				g.state.Players[i].Gold -= config.CostGold
-				g.state.Players[i].Wood -= config.CostWood
-				g.state.Players[i].Iron -= config.CostIron
-				g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "port"})
-				return nil
-			}
-		}
-		return errors.New("insufficient resources")
-	} else if req.Type == "place_fort" {
-		if g.state.Tiles[req.ToCol][req.ToRow].Type != "land" || g.unitAt(req.ToCol, req.ToRow) || g.buildingAt(req.ToCol, req.ToRow) {
-			return errors.New("cannot place fort here")
-		}
-		config := BuildingConfigs["fort"]
-		for i, p := range g.state.Players {
-			if p.ID == g.state.CurrentPlayer && p.Gold >= config.CostGold && p.Wood >= config.CostWood && p.Iron >= config.CostIron {
-				g.state.Players[i].Gold -= config.CostGold
-				g.state.Players[i].Wood -= config.CostWood
-				g.state.Players[i].Iron -= config.CostIron
-				g.state.Buildings = append(g.state.Buildings, Building{Col: req.ToCol, Row: req.ToRow, Owner: g.state.CurrentPlayer, Level: 1, Type: "fort"})
-				return nil
-			}
-		}
-		return errors.New("insufficient resources")
 	}
-	return errors.New("unknown move type")
+	return errors.New("invalid move type")
+}
+
+func (g *GameImpl) Place(ctx context.Context, req MoveRequest) error {
+	g.logger.Info("Processing place", "type", req.Type, "toCol", req.ToCol, "toRow", req.ToRow)
+	if strategy, ok := g.placeStrategies[req.Type]; ok {
+		return strategy.Execute(g, req)
+	}
+	return errors.New("invalid place type")
 }
 
 func (g *GameImpl) unitAt(col, row int) bool {
@@ -327,6 +436,27 @@ func (g *GameImpl) MoveHandler(w http.ResponseWriter, r *http.Request) {
 	if err := g.Move(r.Context(), req); err != nil {
 		g.logger.Error("Move failed", "error", err)
 		http.Error(w, fmt.Sprintf("Move failed: %v", err), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (g *GameImpl) PlaceHandler(w http.ResponseWriter, r *http.Request) {
+	if g.state == nil {
+		g.logger.Warn("Game state is nil")
+		http.Error(w, "Game not initialized", http.StatusBadRequest)
+		return
+	}
+	var req MoveRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		g.logger.Error("Bad request", "error", err)
+		http.Error(w, fmt.Sprintf("Invalid request: %v", err), http.StatusBadRequest)
+		return
+	}
+	g.logger.Info("Place request", "type", req.Type, "to", fmt.Sprintf("(%d,%d)", req.ToCol, req.ToRow))
+	if err := g.Place(r.Context(), req); err != nil {
+		g.logger.Error("Place failed", "error", err)
+		http.Error(w, fmt.Sprintf("Place failed: %v", err), http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

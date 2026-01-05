@@ -35,6 +35,7 @@ func main() {
 	http.HandleFunc("/api/map", gameSvc.MapHandler)
 	http.HandleFunc("/api/game", gameSvc.GameHandler)
 	http.HandleFunc("/api/move", gameSvc.MoveHandler)
+	http.HandleFunc("/api/place", gameSvc.PlaceHandler)
 	http.HandleFunc("/api/move-range", gameSvc.MoveRangeHandler)
 	http.HandleFunc("/api/endturn", gameSvc.EndTurnHandler)
 	http.HandleFunc("/ws", gameSvc.WebSocketHandler)

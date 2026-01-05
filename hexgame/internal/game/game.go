@@ -86,6 +86,7 @@ type BuildingConfig struct {
 	CostGold       int
 	CostWood       int
 	CostIron       int
+	CostResearch   int
 	ProductionGold int
 	ProductionWood int
 	ProductionIron int
@@ -103,7 +104,7 @@ var UnitConfigs = map[string]map[int]UnitConfig{
 }
 
 var BuildingConfigs = map[string]BuildingConfig{
-	"city": {CostGold: 50, CostWood: 0, CostIron: 0, ProductionGold: 10, ProductionWood: 0, ProductionIron: 0},
-	"port": {CostGold: 30, CostWood: 10, CostIron: 0, ProductionGold: 0, ProductionWood: 5, ProductionIron: 0},
-	"fort": {CostGold: 40, CostWood: 0, CostIron: 5, ProductionGold: 0, ProductionWood: 0, ProductionIron: 3},
+	"city": {CostGold: 50, CostWood: 0, CostIron: 0, CostResearch: 0, ProductionGold: 10, ProductionWood: 0, ProductionIron: 0},
+	"port": {CostGold: 30, CostWood: 10, CostIron: 0, CostResearch: 0, ProductionGold: 0, ProductionWood: 5, ProductionIron: 0},
+	"fort": {CostGold: 40, CostWood: 0, CostIron: 5, CostResearch: 0, ProductionGold: 0, ProductionWood: 0, ProductionIron: 3},
 }

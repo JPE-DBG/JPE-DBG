@@ -221,7 +221,8 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
             else if (state.selectedBarType === 'port') type = 'place_port';
             else if (state.selectedBarType === 'fort') type = 'place_fort';
             if (type) {
-                await fetch('/api/move', {
+                const url = type === 'move' ? '/api/move' : '/api/place';
+                await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type, toCol: col, toRow: row })
