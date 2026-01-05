@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"hexgame/internal/game"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -16,32 +17,33 @@ func main() {
 
 	// Validate and set map size
 	if *cols < 30 || *cols > 50000 {
-		log.Printf("Invalid columns value %d, using default %d", *cols, game.MapCols)
+		slog.Warn("Invalid columns value, using default", "cols", *cols, "default", game.MapCols)
 		*cols = game.MapCols
 	}
 	if *rows < 30 || *rows > 50000 {
-		log.Printf("Invalid rows value %d, using default %d", *rows, game.MapRows)
+		slog.Warn("Invalid rows value, using default", "rows", *rows, "default", game.MapRows)
 		*rows = game.MapRows
 	}
 
-	// Set initial map size
-	game.SetInitialMapSize(*cols, *rows)
+	// Create game service
+	gameSvc := game.NewGame(game.WithInitialSize(*cols, *rows))
 
 	staticDir := filepath.Join(".", "web", "static")
 	fs := http.FileServer(http.Dir(staticDir))
 
 	http.Handle("/", fs)
-	http.HandleFunc("/api/map", game.MapHandler)
-	http.HandleFunc("/api/game", game.GameHandler)
-	http.HandleFunc("/api/move", game.MoveHandler)
-	http.HandleFunc("/api/move-range", game.MoveRangeHandler)
-	http.HandleFunc("/api/endturn", game.EndTurnHandler)
-	http.HandleFunc("/ws", game.WebSocketHandler)
-	http.HandleFunc("/api/join", game.JoinHandler)
+	http.HandleFunc("/api/map", gameSvc.MapHandler)
+	http.HandleFunc("/api/game", gameSvc.GameHandler)
+	http.HandleFunc("/api/move", gameSvc.MoveHandler)
+	http.HandleFunc("/api/move-range", gameSvc.MoveRangeHandler)
+	http.HandleFunc("/api/endturn", gameSvc.EndTurnHandler)
+	http.HandleFunc("/ws", gameSvc.WebSocketHandler)
+	http.HandleFunc("/api/join", gameSvc.JoinHandler)
 
-	log.Printf("Starting with map size %dx%d", *cols, *rows)
-	log.Println("Serving on http://localhost:8080 ...")
+	slog.Info("Starting server", "cols", *cols, "rows", *rows)
+	slog.Info("Serving on http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
+		slog.Error("Server failed", "error", err)
+		os.Exit(1)
 	}
 }

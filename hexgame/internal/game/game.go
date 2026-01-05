@@ -5,12 +5,6 @@ var (
 	MapRows = 50
 )
 
-// SetInitialMapSize sets the initial map dimensions
-func SetInitialMapSize(cols, rows int) {
-	MapCols = cols
-	MapRows = rows
-}
-
 type Tile struct {
 	Type string `json:"type"`
 }
@@ -57,8 +51,6 @@ type GameState struct {
 	CurrentPlayer int        `json:"currentPlayer"`
 }
 
-var gameState *GameState
-
 func newGameState(cols, rows int) *GameState {
 	tiles := generateMapV3(cols, rows)
 	players := []Player{} // Start with no default players
@@ -74,64 +66,6 @@ func newGameState(cols, rows int) *GameState {
 		Turn:          1,
 		CurrentPlayer: 1, // Will be updated when first player joins
 	}
-}
-
-func unitAt(col, row int) bool {
-	for _, u := range gameState.Units {
-		if u.Col == col && u.Row == row {
-			return true
-		}
-	}
-	return false
-}
-
-func buildingAt(col, row int) bool {
-	for _, b := range gameState.Buildings {
-		if b.Col == col && b.Row == row {
-			return true
-		}
-	}
-	return false
-}
-
-// Returns a list of [col, row] pairs for valid move range
-func getMoveRange(col, row, rng int, unitType string) [][2]int {
-	if gameState == nil {
-		return nil
-	}
-	visited := make([][]bool, gameState.Cols)
-	for i := range visited {
-		visited[i] = make([]bool, gameState.Rows)
-	}
-	result := [][2]int{}
-	queue := [][3]int{{col, row, 0}}
-	visited[col][row] = true
-	for len(queue) > 0 {
-		c, r, dist := queue[0][0], queue[0][1], queue[0][2]
-		queue = queue[1:]
-		if dist > 0 {
-			result = append(result, [2]int{c, r})
-		}
-		if dist == rng {
-			continue
-		}
-		for _, n := range hexNeighbors(c, r, gameState.Cols, gameState.Rows) {
-			nc, nr := n[0], n[1]
-			if !visited[nc][nr] {
-				valid := false
-				if unitType == "ship" {
-					valid = (gameState.Tiles[nc][nr].Type == "land" || gameState.Tiles[nc][nr].Type == "water") && !unitAt(nc, nr) && !buildingAt(nc, nr)
-				} else if unitType == "troop" {
-					valid = gameState.Tiles[nc][nr].Type == "land" && !unitAt(nc, nr) && !buildingAt(nc, nr)
-				}
-				if valid {
-					visited[nc][nr] = true
-					queue = append(queue, [3]int{nc, nr, dist + 1})
-				}
-			}
-		}
-	}
-	return result
 }
 
 type UnitStats struct {
