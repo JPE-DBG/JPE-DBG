@@ -296,6 +296,12 @@ export function setupInputHandlers(canvas, ctx, scheduleDrawGrid) {
         const unit = state.gameState.units.find(u => u.col === col && u.row === row);
         const building = state.gameState.buildings.find(b => b.col === col && b.row === row);
         
+        // Don't interact with other players' units or buildings
+        if ((unit && unit.owner !== state.gameState.currentPlayer) || 
+            (building && building.owner !== state.gameState.currentPlayer)) {
+            return;
+        }
+        
         if (state.selectedBarType) {
             // Place unit or building
             let type = '';
