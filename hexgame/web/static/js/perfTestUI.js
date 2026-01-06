@@ -7,11 +7,20 @@
 
 import * as perfMeasurement from './perfMeasurement.js';
 
+// Global constant to control performance panel visibility
+export const SHOW_PERFORMANCE_PANEL = true; // Set to false to hide the performance testing UI
+
 // Store references to state-setting functions
 let stateSetters = null;
 
 // Create and display performance testing UI
 export function createPerfTestUI() {
+    // Check global constant to determine if panel should be shown
+    if (!SHOW_PERFORMANCE_PANEL) {
+        console.log("Performance panel disabled by SHOW_PERFORMANCE_PANEL constant");
+        return;
+    }
+    
     console.log("Creating performance testing UI...");
     
     // Create the main container
