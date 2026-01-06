@@ -597,48 +597,6 @@ export function clearAllMeasurements() {
     return true;
 }
 
-// Render performance metrics overlay on canvas
-export function renderPerfOverlay(ctx) {
-    if (!ctx) return;
-    
-    ctx.save();
-    
-    // Background for metrics panel
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(10, 10, 220, 150);
-    
-    ctx.font = '14px monospace';
-    ctx.fillStyle = '#fff';
-    
-    // Basic metrics
-    ctx.fillText(`Frame time: ${renderTime.toFixed(2)}ms`, 20, 30);
-    ctx.fillText(`Tiles rendered: ${lastTileCount}`, 20, 50);
-    
-    // Recording status
-    if (isPerfTracking) {
-        if (!scrollTrackingActive) {
-            ctx.fillStyle = '#FFA500'; // Orange for stabilization
-            ctx.fillText(`STABILIZING (${stabilizationFrames}/${STABILIZATION_FRAME_COUNT})`, 20, 70);
-        } else {
-            ctx.fillStyle = '#4CAF50'; // Green for active recording
-            ctx.fillText(`RECORDING (${actualFrameTimes.length} frames)`, 20, 70);
-        }
-    } else if (actualFrameTimes.length > 0) {
-        const usedMetric = scrollMetrics.medianFrameTime || scrollMetrics.avgFrameTime;
-        ctx.fillText(`Last test: ${usedMetric.toFixed(2)}ms`, 20, 90);
-        ctx.fillText(`Frames: ${scrollMetrics.totalFrames}`, 20, 110);
-    }
-    
-    // Auto-scroll status if active
-    if (isAutoScrolling) {
-        const progress = (autoScrollPosition / autoScrollMaxPosition * 100).toFixed(1);
-        ctx.fillStyle = '#2196F3'; // Blue for auto-scroll
-        ctx.fillText(`AUTO-SCROLL: ${progress}%`, 20, 130);
-    }
-    
-    ctx.restore();
-}
-
 // Start scroll test at specific zoom level
 function startScrollTestAtZoom(gameState, setOffset, setZoom, targetZoom, cols, rows) {
     console.log(`Starting ${currentTestPhase}: ${testPhases.find(p => p.name === currentTestPhase)?.description}`);

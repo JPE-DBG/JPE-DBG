@@ -12,9 +12,7 @@ let stateSetters = null;
 
 // Create and display performance testing UI
 export function createPerfTestUI() {
-    // Check if measurement system is working properly
-    const validationResult = perfMeasurement.validateMeasurementSystem();
-    console.log("Performance measurement validation:", validationResult);
+    console.log("Creating performance testing UI...");
     
     // Create the main container
     const perfTestDiv = document.createElement('div');
@@ -27,13 +25,29 @@ export function createPerfTestUI() {
         color: white;
         padding: 10px;
         border-radius: 5px;
-        z-index: 1000;
+        z-index: 10000;
         width: 350px;
         font-family: sans-serif;
+        visibility: visible;
     `;
     
     perfTestDiv.innerHTML = `
         <h3 style="margin: 0 0 10px 0;">Performance Testing</h3>
+        
+        <div id="realTimeMetrics" style="margin-bottom: 10px; font-size: 12px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 3px;">
+            <div>Frame time: <span id="frameTime">--</span>ms</div>
+            <div>Tiles rendered: <span id="tilesRendered">--</span></div>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <strong>Last Test Results:</strong>
+            <pre id="perfResults" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;"></pre>
+        </div>
+        <div id="comparisonResults" style="margin-bottom: 15px; display: block;">
+            <strong>Comparison:</strong>
+            <pre id="comparisonData" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;">No comparison data yet.</pre>
+        </div>
+        
         <!-- simple 2-column grid: each button is placed into its own cell; columns size to largest content -->
         <div class="perf-grid" style="display: grid; grid-template-columns: max-content max-content; gap: 6px 10px; margin-bottom: 6px; align-items: center;">
             <button id="startPerfTest" class="perf-btn" style="padding: 5px 10px; background: #4CAF50; border: none; color: white; border-radius: 3px; grid-column: 1;">Start Auto Test</button>
@@ -50,18 +64,10 @@ export function createPerfTestUI() {
             <div class="status-text">Not recording</div>
             <div class="progress-bar" style="height: 5px; margin-top: 5px; background: #333;"><div class="progress" style="width: 0%; height: 100%; background: #4CAF50;"></div></div>
         </div>
-        <div style="margin-top: 15px;">
-            <strong>Last Test Results:</strong>
-            <pre id="perfResults" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;"></pre>
-        </div>
-        <div id="comparisonResults" style="margin-top: 15px; display: block;">
-            <strong>Comparison:</strong>
-            <pre id="comparisonData" style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); max-height: 200px; overflow-y: auto; font-size: 12px;">No comparison data yet.</pre>
-        </div>
     `;
     
     document.body.appendChild(perfTestDiv);
-    
+
     // Set up event listeners for the performance testing buttons
     document.getElementById('startPerfTest').addEventListener('click', startPerfTrackingSession);
     document.getElementById('stopPerfTest').addEventListener('click', stopPerfTrackingSession);
@@ -90,6 +96,12 @@ function startStatusUpdateLoop() {
     const updateStatus = () => {
         const metrics = perfMeasurement.getPerfMetrics();
         const statusDiv = document.getElementById('recordingStatus');
+        
+        // Update real-time metrics
+        const frameTimeSpan = document.getElementById('frameTime');
+        const tilesSpan = document.getElementById('tilesRendered');
+        if (frameTimeSpan) frameTimeSpan.textContent = metrics.renderTime.toFixed(2);
+        if (tilesSpan) tilesSpan.textContent = metrics.visibleTiles;
         
         // Always show the status box; update text and progress depending on metrics
         const statusText = statusDiv.querySelector('.status-text');

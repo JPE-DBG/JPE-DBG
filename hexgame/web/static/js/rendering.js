@@ -114,8 +114,7 @@ export function drawGrid(ctx, canvas) {
     // End performance monitoring
     perfMeasurement.monitorFrameEnd();
     
-    // Render performance overlay if needed
-    perfMeasurement.renderPerfOverlay(ctx);
+    // Performance overlay now handled by UI panel
 }
 
 // Draw visible hexes in a specific region

@@ -139,6 +139,9 @@ async function initGame() {
             ROWS: state.ROWS,
         });
         
+        // Create the performance testing UI
+        perfTestUI.createPerfTestUI();
+        
         // Connect to WebSocket
         const ws = new WebSocket('ws://localhost:8080/ws');
         ws.onmessage = (event) => {
@@ -229,6 +232,25 @@ function setupPlayerSelection() {
             }
             
             state.setMapCenteredOnce(true);
+            
+            // Provide state management functions to the performance testing module
+            perfTestUI.setStateFunctions({
+                gameState: state.gameState,
+                setOffset: state.setOffset,
+                setZoom: state.setZoom,
+                offsetX: state.offsetX,
+                offsetY: state.offsetY,
+                zoom: state.zoom,
+                COLS: state.COLS,
+                ROWS: state.ROWS,
+            });
+            
+            // Create the performance testing UI
+            try {
+                perfTestUI.createPerfTestUI();
+            } catch (error) {
+                console.error('Failed to create performance testing UI:', error);
+            }
             
             // Connect to WebSocket
             const ws = new WebSocket('ws://localhost:8080/ws');
